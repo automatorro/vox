@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { isSameDay } from "date-fns";
-import { LayoutDashboard, CalendarDays } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { DayView } from "@/components/DayView";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { QuickStats } from "@/components/QuickStats";
+import { CreateItemDrawer } from "@/components/CreateItemDrawer";
 import { mockItems } from "@/data/mockData";
 import { Item, Task } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +20,7 @@ const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [items, setItems] = useState<Item[]>(mockItems);
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
+  const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const { toast } = useToast();
 
   const getItemsForDate = (date: Date) => {
@@ -66,6 +68,21 @@ const Index = () => {
   const handleDaySelectFromCalendar = (date: Date) => {
     setSelectedDate(date);
     setViewMode('dashboard');
+  };
+
+  const handleCreateItem = (newItem: Item) => {
+    setItems(prev => [...prev, newItem]);
+    
+    const typeLabels = {
+      task: 'Task',
+      event: 'Eveniment',
+      reminder: 'Reminder'
+    };
+    
+    toast({
+      title: `${typeLabels[newItem.type]} creat!`,
+      description: newItem.title,
+    });
   };
 
   return (
@@ -138,10 +155,28 @@ const Index = () => {
         )}
       </main>
 
-      {/* Floating Voice Button */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+      {/* Floating Buttons */}
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4">
+        {/* Add Button */}
+        <Button
+          variant="glass"
+          size="icon"
+          className="h-14 w-14 rounded-full"
+          onClick={() => setCreateDrawerOpen(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+
+        {/* Voice Button */}
         <VoiceButton onActivate={handleVoiceActivate} />
       </div>
+
+      {/* Create Item Drawer */}
+      <CreateItemDrawer
+        open={createDrawerOpen}
+        onOpenChange={setCreateDrawerOpen}
+        onCreateItem={handleCreateItem}
+      />
     </div>
   );
 };
