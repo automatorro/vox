@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { isSameDay } from "date-fns";
 import { LayoutDashboard, CalendarDays, Plus } from "lucide-react";
 import { Header } from "@/components/Header";
@@ -8,9 +8,11 @@ import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { QuickStats } from "@/components/QuickStats";
 import { CreateItemDrawer } from "@/components/CreateItemDrawer";
+import { NotificationSettings } from "@/components/NotificationSettings";
 import { mockItems } from "@/data/mockData";
 import { Item, Task } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +23,29 @@ const Index = () => {
   const [items, setItems] = useState<Item[]>(mockItems);
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({
+    pushEnabled: false,
+    emailEnabled: false,
+    email: '',
+  });
   const { toast } = useToast();
+
+  const {
+    permission,
+    requestPermission,
+    runAllChecks,
+  } = useNotifications(items, notificationSettings);
+
+  // Run notification checks when items change or on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (notificationSettings.pushEnabled || notificationSettings.emailEnabled) {
+        runAllChecks();
+      }
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [items, notificationSettings.pushEnabled, notificationSettings.emailEnabled]);
 
   const getItemsForDate = (date: Date) => {
     return items.filter(item => {
@@ -87,7 +111,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onCalendarClick={handleCalendarClick} />
+      <Header 
+        onCalendarClick={handleCalendarClick}
+        onSettingsClick={() => setNotificationSettingsOpen(true)}
+      />
       
       {/* View Toggle */}
       <div className="px-6 mb-4">
@@ -176,6 +203,16 @@ const Index = () => {
         open={createDrawerOpen}
         onOpenChange={setCreateDrawerOpen}
         onCreateItem={handleCreateItem}
+      />
+
+      {/* Notification Settings */}
+      <NotificationSettings
+        open={notificationSettingsOpen}
+        onOpenChange={setNotificationSettingsOpen}
+        settings={notificationSettings}
+        onSettingsChange={setNotificationSettings}
+        onRequestPermission={requestPermission}
+        permission={permission}
       />
     </div>
   );
