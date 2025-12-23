@@ -9,9 +9,11 @@ interface DayViewProps {
   items: Item[];
   overloaded?: boolean;
   onCompleteTask?: (id: string) => void;
+  onEditItem?: (item: Item) => void;
+  onDeleteItem?: (id: string) => void;
 }
 
-export const DayView = ({ date, items, overloaded, onCompleteTask }: DayViewProps) => {
+export const DayView = ({ date, items, overloaded, onCompleteTask, onEditItem, onDeleteItem }: DayViewProps) => {
   const isToday = format(new Date(), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
   
   // Sort items by time/priority
@@ -89,6 +91,8 @@ export const DayView = ({ date, items, overloaded, onCompleteTask }: DayViewProp
               <ItemCard 
                 item={item} 
                 onComplete={onCompleteTask}
+                onEdit={onEditItem}
+                onDelete={onDeleteItem}
               />
             </div>
           ))
