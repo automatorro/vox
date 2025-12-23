@@ -1,4 +1,4 @@
-import { Calendar, Settings } from "lucide-react";
+import { Calendar, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -34,7 +34,7 @@ export const Header = ({ onCalendarClick, onSettingsClick }: HeaderProps) => {
           onClick={onSettingsClick}
           className="text-muted-foreground hover:text-foreground"
         >
-          <Settings className="h-5 w-5" />
+          <Bell className="h-5 w-5" />
         </Button>
       </div>
     </header>
