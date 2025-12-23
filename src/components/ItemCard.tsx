@@ -1,12 +1,21 @@
-import { CheckCircle2, Clock, Calendar, Bell, Circle } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { Task, Event, Reminder, Priority } from "@/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface ItemCardProps {
   item: Task | Event | Reminder;
   onComplete?: (id: string) => void;
+  onEdit?: (item: Task | Event | Reminder) => void;
+  onDelete?: (id: string) => void;
 }
 
 const priorityConfig: Record<Priority, { label: string; className: string }> = {
@@ -16,7 +25,7 @@ const priorityConfig: Record<Priority, { label: string; className: string }> = {
   critical: { label: 'Critical', className: 'bg-destructive/20 text-destructive' },
 };
 
-export const ItemCard = ({ item, onComplete }: ItemCardProps) => {
+export const ItemCard = ({ item, onComplete, onEdit, onDelete }: ItemCardProps) => {
   const isTask = item.type === 'task';
   const isEvent = item.type === 'event';
   const isReminder = item.type === 'reminder';
@@ -107,6 +116,32 @@ export const ItemCard = ({ item, onComplete }: ItemCardProps) => {
           )}
         </div>
       </div>
+
+      {/* Actions Menu */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="bg-popover">
+          <DropdownMenuItem onClick={() => onEdit?.(item)} className="gap-2 cursor-pointer">
+            <Pencil className="h-4 w-4" />
+            Editează
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            onClick={() => onDelete?.(item.id)} 
+            className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Șterge
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

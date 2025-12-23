@@ -8,6 +8,7 @@ import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
 import { QuickStats } from "@/components/QuickStats";
 import { CreateItemDrawer } from "@/components/CreateItemDrawer";
+import { EditItemDrawer } from "@/components/EditItemDrawer";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { mockItems } from "@/data/mockData";
 import { Item, Task } from "@/types";
@@ -23,6 +24,8 @@ const Index = () => {
   const [items, setItems] = useState<Item[]>(mockItems);
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     pushEnabled: false,
@@ -109,6 +112,46 @@ const Index = () => {
     });
   };
 
+  const handleEditItem = (item: Item) => {
+    setEditingItem(item);
+    setEditDrawerOpen(true);
+  };
+
+  const handleUpdateItem = (updatedItem: Item) => {
+    setItems(prev => prev.map(item => 
+      item.id === updatedItem.id ? updatedItem : item
+    ));
+    
+    const typeLabels = {
+      task: 'Task',
+      event: 'Eveniment',
+      reminder: 'Reminder'
+    };
+    
+    toast({
+      title: `${typeLabels[updatedItem.type]} actualizat!`,
+      description: updatedItem.title,
+    });
+  };
+
+  const handleDeleteItem = (id: string) => {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    setItems(prev => prev.filter(item => item.id !== id));
+    
+    const typeLabels = {
+      task: 'Task',
+      event: 'Eveniment',
+      reminder: 'Reminder'
+    };
+    
+    toast({
+      title: `${typeLabels[item.type]} șters!`,
+      description: item.title,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header 
@@ -170,6 +213,8 @@ const Index = () => {
                 items={todayItems}
                 overloaded={isOverloaded}
                 onCompleteTask={handleCompleteTask}
+                onEditItem={handleEditItem}
+                onDeleteItem={handleDeleteItem}
               />
             </section>
           </>
@@ -203,6 +248,14 @@ const Index = () => {
         open={createDrawerOpen}
         onOpenChange={setCreateDrawerOpen}
         onCreateItem={handleCreateItem}
+      />
+
+      {/* Edit Item Drawer */}
+      <EditItemDrawer
+        open={editDrawerOpen}
+        onOpenChange={setEditDrawerOpen}
+        item={editingItem}
+        onUpdateItem={handleUpdateItem}
       />
 
       {/* Notification Settings */}
