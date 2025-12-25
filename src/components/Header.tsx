@@ -1,12 +1,19 @@
-import { Calendar, Bell } from "lucide-react";
+import { Calendar, Bell, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
   onCalendarClick?: () => void;
   onSettingsClick?: () => void;
+  onGoogleCalendarClick?: () => void;
+  isGoogleConnected?: boolean;
 }
 
-export const Header = ({ onCalendarClick, onSettingsClick }: HeaderProps) => {
+export const Header = ({ 
+  onCalendarClick, 
+  onSettingsClick, 
+  onGoogleCalendarClick,
+  isGoogleConnected 
+}: HeaderProps) => {
   return (
     <header className="flex items-center justify-between px-6 py-4">
       <div className="flex items-center gap-3">
@@ -20,6 +27,18 @@ export const Header = ({ onCalendarClick, onSettingsClick }: HeaderProps) => {
       </div>
 
       <div className="flex items-center gap-2">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={onGoogleCalendarClick}
+          className="text-muted-foreground hover:text-foreground relative"
+          title="Google Calendar"
+        >
+          <Link2 className="h-5 w-5" />
+          {isGoogleConnected && (
+            <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-background" />
+          )}
+        </Button>
         <Button 
           variant="ghost" 
           size="icon"
