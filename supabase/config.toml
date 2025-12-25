@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.parse-voice-input]
 verify_jwt = false
+
+[functions.google-calendar]
+verify_jwt = false

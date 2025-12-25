@@ -10,10 +10,12 @@ import { QuickStats } from "@/components/QuickStats";
 import { CreateItemDrawer } from "@/components/CreateItemDrawer";
 import { EditItemDrawer } from "@/components/EditItemDrawer";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { mockItems } from "@/data/mockData";
-import { Item, Task } from "@/types";
+import { Item, Task, Event } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +29,35 @@ const Index = () => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
+  const [googleCalendarSettingsOpen, setGoogleCalendarSettingsOpen] = useState(false);
   const [notificationSettings, setNotificationSettings] = useState({
     pushEnabled: false,
     emailEnabled: false,
     email: '',
   });
   const { toast } = useToast();
+
+  // Google Calendar integration
+  const handleEventsImported = (importedEvents: Event[]) => {
+    setItems(prev => {
+      // Remove old synced events and add new ones
+      const nonSyncedItems = prev.filter(item => 
+        item.type !== 'event' || !(item as Event).synced
+      );
+      return [...nonSyncedItems, ...importedEvents];
+    });
+  };
+
+  const {
+    isConnected: isGoogleConnected,
+    isLoading: isGoogleLoading,
+    isSyncing: isGoogleSyncing,
+    connect: connectGoogle,
+    disconnect: disconnectGoogle,
+    syncEvents: syncGoogleEvents,
+    createEvent: createGoogleEvent,
+    deleteEvent: deleteGoogleEvent,
+  } = useGoogleCalendar(handleEventsImported);
 
   const {
     permission,
@@ -91,7 +116,21 @@ const Index = () => {
     setViewMode('dashboard');
   };
 
-  const handleCreateItem = (newItem: Item) => {
+  const handleCreateItem = async (newItem: Item) => {
+    // If it's an event and Google Calendar is connected, sync it
+    if (newItem.type === 'event' && isGoogleConnected) {
+      const event = newItem as Event;
+      const googleId = await createGoogleEvent({
+        title: event.title,
+        startTime: new Date(event.startTime),
+        duration: event.duration,
+      });
+      if (googleId) {
+        (newItem as any).googleId = googleId;
+        (newItem as any).synced = true;
+      }
+    }
+
     setItems(prev => [...prev, newItem]);
     
     const typeLabels = {
@@ -128,9 +167,14 @@ const Index = () => {
     });
   };
 
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     const item = items.find(i => i.id === id);
     if (!item) return;
+
+    // If it's a synced event, delete from Google Calendar too
+    if (item.type === 'event' && isGoogleConnected && (item as any).googleId) {
+      await deleteGoogleEvent((item as any).googleId);
+    }
 
     setItems(prev => prev.filter(item => item.id !== id));
     
@@ -151,6 +195,8 @@ const Index = () => {
       <Header 
         onCalendarClick={handleCalendarClick}
         onSettingsClick={() => setNotificationSettingsOpen(true)}
+        onGoogleCalendarClick={() => setGoogleCalendarSettingsOpen(true)}
+        isGoogleConnected={isGoogleConnected}
       />
       
       {/* View Toggle */}
@@ -260,6 +306,18 @@ const Index = () => {
         onSettingsChange={setNotificationSettings}
         onRequestPermission={requestPermission}
         permission={permission}
+      />
+
+      {/* Google Calendar Settings */}
+      <GoogleCalendarSettings
+        open={googleCalendarSettingsOpen}
+        onOpenChange={setGoogleCalendarSettingsOpen}
+        isConnected={isGoogleConnected}
+        isLoading={isGoogleLoading}
+        isSyncing={isGoogleSyncing}
+        onConnect={connectGoogle}
+        onDisconnect={disconnectGoogle}
+        onSync={syncGoogleEvents}
       />
     </div>
   );

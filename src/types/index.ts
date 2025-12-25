@@ -18,6 +18,7 @@ export interface Event {
   startTime: Date;
   duration: number; // in minutes
   synced: boolean;
+  googleId?: string; // Google Calendar event ID for synced events
   createdAt: Date;
 }
 
