@@ -81,12 +81,6 @@ const Index = () => {
     }));
   };
 
-  const handleVoiceActivate = () => {
-    toast({
-      title: "Ascult...",
-      description: "Spune ce ai de făcut și eu mă ocup de restul.",
-    });
-  };
 
   const handleCalendarClick = () => {
     setViewMode(viewMode === 'calendar' ? 'dashboard' : 'calendar');
@@ -240,7 +234,7 @@ const Index = () => {
         </Button>
 
         {/* Voice Button */}
-        <VoiceButton onActivate={handleVoiceActivate} />
+        <VoiceButton onItemCreated={handleCreateItem} />
       </div>
 
       {/* Create Item Drawer */}
