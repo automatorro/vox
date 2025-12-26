@@ -14,7 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      items: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          duration: number | null
+          google_id: string | null
+          id: string
+          notified: boolean | null
+          priority: Database["public"]["Enums"]["priority_level"] | null
+          start_time: string | null
+          synced: boolean | null
+          time: string | null
+          title: string
+          type: Database["public"]["Enums"]["item_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          duration?: number | null
+          google_id?: string | null
+          id?: string
+          notified?: boolean | null
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          start_time?: string | null
+          synced?: boolean | null
+          time?: string | null
+          title: string
+          type: Database["public"]["Enums"]["item_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          duration?: number | null
+          google_id?: string | null
+          id?: string
+          notified?: boolean | null
+          priority?: Database["public"]["Enums"]["priority_level"] | null
+          start_time?: string | null
+          synced?: boolean | null
+          time?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["item_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          google_calendar_token: string | null
+          google_calendar_token_expiry: string | null
+          id: string
+          notification_email_enabled: boolean | null
+          notification_minutes_before: number | null
+          notification_push_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          google_calendar_token?: string | null
+          google_calendar_token_expiry?: string | null
+          id: string
+          notification_email_enabled?: boolean | null
+          notification_minutes_before?: number | null
+          notification_push_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          google_calendar_token?: string | null
+          google_calendar_token_expiry?: string | null
+          id?: string
+          notification_email_enabled?: boolean | null
+          notification_minutes_before?: number | null
+          notification_push_enabled?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +129,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      item_type: "task" | "event" | "reminder"
+      priority_level: "low" | "medium" | "high" | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +257,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      item_type: ["task", "event", "reminder"],
+      priority_level: ["low", "medium", "high", "critical"],
+    },
   },
 } as const
