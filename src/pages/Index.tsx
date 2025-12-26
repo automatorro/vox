@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { isSameDay } from "date-fns";
-import { LayoutDashboard, CalendarDays, Plus } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { DayView } from "@/components/DayView";
@@ -11,19 +11,20 @@ import { CreateItemDrawer } from "@/components/CreateItemDrawer";
 import { EditItemDrawer } from "@/components/EditItemDrawer";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
-import { mockItems } from "@/data/mockData";
 import { Item, Task, Event } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
+import { useAuth } from "@/hooks/useAuth";
+import { useItems } from "@/hooks/useItems";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 type ViewMode = 'dashboard' | 'calendar';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [items, setItems] = useState<Item[]>(mockItems);
   const [viewMode, setViewMode] = useState<ViewMode>('dashboard');
   const [createDrawerOpen, setCreateDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
@@ -36,6 +37,8 @@ const Index = () => {
     email: '',
   });
   const { toast } = useToast();
+  const { user, profile, signOut } = useAuth();
+  const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, setItems } = useItems(user?.id);
 
   // Google Calendar integration
   const handleEventsImported = (importedEvents: Event[]) => {
@@ -65,6 +68,17 @@ const Index = () => {
     runAllChecks,
   } = useNotifications(items, notificationSettings);
 
+  // Sync notification settings from profile
+  useEffect(() => {
+    if (profile) {
+      setNotificationSettings(prev => ({
+        ...prev,
+        pushEnabled: profile.notification_push_enabled,
+        emailEnabled: profile.notification_email_enabled,
+      }));
+    }
+  }, [profile]);
+
   // Run notification checks when items change or on mount
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -80,7 +94,7 @@ const Index = () => {
       const itemDate = item.type === 'task' 
         ? (item as Task).deadline 
         : item.type === 'event' 
-          ? (item as any).startTime 
+          ? (item as Event).startTime 
           : (item as any).time;
       return isSameDay(new Date(itemDate), date);
     });
@@ -89,23 +103,20 @@ const Index = () => {
   const todayItems = getItemsForDate(selectedDate);
   const isOverloaded = todayItems.length > 6;
 
-  const handleCompleteTask = (id: string) => {
-    setItems(prev => prev.map(item => {
-      if (item.id === id && item.type === 'task') {
-        const task = item as Task;
-        const newCompleted = !task.completed;
-        
-        toast({
-          title: newCompleted ? "Task completat! 🎉" : "Task reactivat",
-          description: task.title,
-        });
-        
-        return { ...task, completed: newCompleted };
-      }
-      return item;
-    }));
+  const handleCompleteTask = async (id: string) => {
+    const item = items.find(i => i.id === id);
+    if (!item || item.type !== 'task') return;
+    
+    const task = item as Task;
+    const success = await toggleTaskComplete(id);
+    
+    if (success) {
+      toast({
+        title: !task.completed ? "Task completat! 🎉" : "Task reactivat",
+        description: task.title,
+      });
+    }
   };
-
 
   const handleCalendarClick = () => {
     setViewMode(viewMode === 'calendar' ? 'dashboard' : 'calendar');
@@ -118,31 +129,35 @@ const Index = () => {
 
   const handleCreateItem = async (newItem: Item) => {
     // If it's an event and Google Calendar is connected, sync it
+    let googleId: string | undefined;
     if (newItem.type === 'event' && isGoogleConnected) {
       const event = newItem as Event;
-      const googleId = await createGoogleEvent({
+      googleId = await createGoogleEvent({
         title: event.title,
         startTime: new Date(event.startTime),
         duration: event.duration,
-      });
-      if (googleId) {
-        (newItem as any).googleId = googleId;
-        (newItem as any).synced = true;
-      }
+      }) || undefined;
     }
 
-    setItems(prev => [...prev, newItem]);
-    
-    const typeLabels = {
-      task: 'Task',
-      event: 'Eveniment',
-      reminder: 'Reminder'
+    const itemToCreate = {
+      ...newItem,
+      ...(googleId && { googleId, synced: true }),
     };
+
+    const created = await createItem(itemToCreate);
     
-    toast({
-      title: `${typeLabels[newItem.type]} creat!`,
-      description: newItem.title,
-    });
+    if (created) {
+      const typeLabels = {
+        task: 'Task',
+        event: 'Eveniment',
+        reminder: 'Reminder'
+      };
+      
+      toast({
+        title: `${typeLabels[created.type]} creat!`,
+        description: created.title,
+      });
+    }
   };
 
   const handleEditItem = (item: Item) => {
@@ -150,21 +165,21 @@ const Index = () => {
     setEditDrawerOpen(true);
   };
 
-  const handleUpdateItem = (updatedItem: Item) => {
-    setItems(prev => prev.map(item => 
-      item.id === updatedItem.id ? updatedItem : item
-    ));
+  const handleUpdateItem = async (updatedItem: Item) => {
+    const success = await updateItem(updatedItem);
     
-    const typeLabels = {
-      task: 'Task',
-      event: 'Eveniment',
-      reminder: 'Reminder'
-    };
-    
-    toast({
-      title: `${typeLabels[updatedItem.type]} actualizat!`,
-      description: updatedItem.title,
-    });
+    if (success) {
+      const typeLabels = {
+        task: 'Task',
+        event: 'Eveniment',
+        reminder: 'Reminder'
+      };
+      
+      toast({
+        title: `${typeLabels[updatedItem.type]} actualizat!`,
+        description: updatedItem.title,
+      });
+    }
   };
 
   const handleDeleteItem = async (id: string) => {
@@ -172,23 +187,44 @@ const Index = () => {
     if (!item) return;
 
     // If it's a synced event, delete from Google Calendar too
-    if (item.type === 'event' && isGoogleConnected && (item as any).googleId) {
-      await deleteGoogleEvent((item as any).googleId);
+    if (item.type === 'event' && isGoogleConnected && (item as Event).googleId) {
+      await deleteGoogleEvent((item as Event).googleId!);
     }
 
-    setItems(prev => prev.filter(item => item.id !== id));
+    const success = await deleteItem(id);
     
-    const typeLabels = {
-      task: 'Task',
-      event: 'Eveniment',
-      reminder: 'Reminder'
-    };
-    
+    if (success) {
+      const typeLabels = {
+        task: 'Task',
+        event: 'Eveniment',
+        reminder: 'Reminder'
+      };
+      
+      toast({
+        title: `${typeLabels[item.type]} șters!`,
+        description: item.title,
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
     toast({
-      title: `${typeLabels[item.type]} șters!`,
-      description: item.title,
+      title: "La revedere! 👋",
+      description: "Te-ai deconectat cu succes",
     });
   };
+
+  if (itemsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Se încarcă datele...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,8 +235,8 @@ const Index = () => {
         isGoogleConnected={isGoogleConnected}
       />
       
-      {/* View Toggle */}
-      <div className="px-6 mb-4">
+      {/* User info & View Toggle */}
+      <div className="px-6 mb-4 flex items-center justify-between">
         <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-card/50 border border-border">
           <Button
             variant="ghost"
@@ -225,6 +261,21 @@ const Index = () => {
           >
             <CalendarDays className="h-4 w-4" />
             Calendar
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            {profile?.full_name || user?.email}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleSignOut}
+            className="h-8 w-8"
+            title="Deconectare"
+          >
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </div>
