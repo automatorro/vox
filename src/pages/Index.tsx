@@ -11,6 +11,7 @@ import { CreateItemDrawer } from "@/components/CreateItemDrawer";
 import { EditItemDrawer } from "@/components/EditItemDrawer";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
+import { AIPrioritization } from "@/components/AIPrioritization";
 import { Item, Task, Event } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -100,8 +101,23 @@ const Index = () => {
     });
   };
 
+  const allTasks = items.filter(item => item.type === 'task') as Task[];
   const todayItems = getItemsForDate(selectedDate);
   const isOverloaded = todayItems.length > 6;
+
+  const handleReorderTasks = (orderedIds: string[]) => {
+    // Reorder items based on AI suggestion (visual reorder for today's view)
+    setItems(prev => {
+      const orderedTasks = orderedIds
+        .map(id => prev.find(item => item.id === id))
+        .filter(Boolean) as Item[];
+      const nonTasks = prev.filter(item => item.type !== 'task');
+      const unorderedTasks = prev.filter(
+        item => item.type === 'task' && !orderedIds.includes(item.id)
+      );
+      return [...orderedTasks, ...unorderedTasks, ...nonTasks];
+    });
+  };
 
   const handleCompleteTask = async (id: string) => {
     const item = items.find(i => i.id === id);
@@ -286,6 +302,14 @@ const Index = () => {
             {/* Quick Stats */}
             <section className="mb-6">
               <QuickStats items={todayItems} />
+            </section>
+
+            {/* AI Prioritization */}
+            <section className="mb-6">
+              <AIPrioritization 
+                tasks={allTasks}
+                onReorder={handleReorderTasks}
+              />
             </section>
 
             {/* Mini Calendar */}
