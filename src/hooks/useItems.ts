@@ -39,6 +39,7 @@ const dbItemToItem = (dbItem: DbItem): Item => {
       deadline: dbItem.deadline ? new Date(dbItem.deadline) : new Date(),
       priority: dbItem.priority ?? 'medium',
       completed: dbItem.completed ?? false,
+      duration: dbItem.duration ?? undefined,
     } as Task;
   }
 
@@ -111,6 +112,7 @@ export const useItems = (userId: string | undefined) => {
       dbData.deadline = task.deadline?.toISOString() ?? null;
       dbData.priority = task.priority ?? 'medium';
       dbData.completed = task.completed ?? false;
+      dbData.duration = task.duration ?? null;
     } else if (item.type === 'event') {
       const event = item as Omit<Event, 'id' | 'createdAt'>;
       dbData.start_time = event.startTime?.toISOString() ?? null;
@@ -152,6 +154,7 @@ export const useItems = (userId: string | undefined) => {
       dbData.deadline = task.deadline?.toISOString() ?? null;
       dbData.priority = task.priority;
       dbData.completed = task.completed;
+      dbData.duration = task.duration ?? null;
     } else if (item.type === 'event') {
       const event = item as Event;
       dbData.start_time = event.startTime?.toISOString() ?? null;

@@ -68,11 +68,12 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>(new Date());
   const [priority, setPriority] = useState<Priority>('medium');
+  const [taskDuration, setTaskDuration] = useState('30');
   
   // Event fields
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [startTime, setStartTime] = useState('10:00');
-  const [duration, setDuration] = useState('60');
+  const [eventDuration, setEventDuration] = useState('60');
   
   // Reminder fields
   const [reminderDate, setReminderDate] = useState<Date | undefined>(new Date());
@@ -89,12 +90,13 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
       setDescription(task.description || '');
       setDeadline(new Date(task.deadline));
       setPriority(task.priority);
+      setTaskDuration(task.duration?.toString() || '30');
     } else if (item.type === 'event') {
       const event = item as Event;
       const eventDate = new Date(event.startTime);
       setStartDate(eventDate);
       setStartTime(format(eventDate, 'HH:mm'));
-      setDuration(event.duration.toString());
+      setEventDuration(event.duration.toString());
     } else if (item.type === 'reminder') {
       const reminder = item as Reminder;
       const reminderDateTime = new Date(reminder.time);
@@ -116,6 +118,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
           description: description.trim() || undefined,
           deadline: deadline || new Date(),
           priority,
+          duration: parseInt(taskDuration) || undefined,
         };
         break;
       
@@ -128,7 +131,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
           ...(item as Event),
           title: title.trim(),
           startTime: eventStartTime,
-          duration: parseInt(duration),
+          duration: parseInt(eventDuration),
         };
         break;
       
@@ -253,6 +256,25 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
                   </Select>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Timp estimat</Label>
+                <Select value={taskDuration} onValueChange={setTaskDuration}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="60">1 oră</SelectItem>
+                    <SelectItem value="90">1.5 ore</SelectItem>
+                    <SelectItem value="120">2 ore</SelectItem>
+                    <SelectItem value="180">3 ore</SelectItem>
+                    <SelectItem value="240">4 ore</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </>
           )}
 
@@ -303,7 +325,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
 
                 <div className="space-y-2">
                   <Label>Durată</Label>
-                  <Select value={duration} onValueChange={setDuration}>
+                  <Select value={eventDuration} onValueChange={setEventDuration}>
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
