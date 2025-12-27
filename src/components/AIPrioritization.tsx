@@ -46,7 +46,7 @@ export const AIPrioritization = ({ tasks, onReorder }: AIPrioritizationProps) =>
             title: t.title,
             priority: t.priority,
             deadline: t.deadline,
-            duration: 30, // default estimation
+            duration: t.duration || 30, // use actual duration or default
             completed: t.completed,
           }))
         }

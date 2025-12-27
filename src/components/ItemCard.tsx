@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer } from "lucide-react";
 import { Task, Event, Reminder, Priority } from "@/types";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -61,6 +61,14 @@ export const ItemCard = ({ item, onComplete, onEdit, onDelete }: ItemCardProps) 
     return format(reminder.time, 'HH:mm');
   };
 
+  const formatDuration = (mins: number) => {
+    if (mins < 60) return `${mins} min`;
+    const hours = Math.floor(mins / 60);
+    const remainingMins = mins % 60;
+    if (remainingMins === 0) return `${hours}h`;
+    return `${hours}h ${remainingMins}m`;
+  };
+
   return (
     <div
       className={cn(
@@ -100,12 +108,20 @@ export const ItemCard = ({ item, onComplete, onEdit, onDelete }: ItemCardProps) 
           </span>
 
           {isTask && (
-            <span className={cn(
-              "text-xs px-2 py-0.5 rounded-full font-medium",
-              priorityConfig[(item as Task).priority].className
-            )}>
-              {priorityConfig[(item as Task).priority].label}
-            </span>
+            <>
+              <span className={cn(
+                "text-xs px-2 py-0.5 rounded-full font-medium",
+                priorityConfig[(item as Task).priority].className
+              )}>
+                {priorityConfig[(item as Task).priority].label}
+              </span>
+              {(item as Task).duration && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Timer className="h-3 w-3" />
+                  {formatDuration((item as Task).duration!)}
+                </span>
+              )}
+            </>
           )}
 
           {isEvent && (item as Event).synced && (

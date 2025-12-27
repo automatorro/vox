@@ -71,11 +71,12 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>(new Date());
   const [priority, setPriority] = useState<Priority>('medium');
+  const [taskDuration, setTaskDuration] = useState('30');
   
   // Event fields
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
   const [startTime, setStartTime] = useState('10:00');
-  const [duration, setDuration] = useState('60');
+  const [eventDuration, setEventDuration] = useState('60');
   
   // Reminder fields
   const [reminderDate, setReminderDate] = useState<Date | undefined>(new Date());
@@ -86,9 +87,10 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
     setDescription('');
     setDeadline(new Date());
     setPriority('medium');
+    setTaskDuration('30');
     setStartDate(new Date());
     setStartTime('10:00');
-    setDuration('60');
+    setEventDuration('60');
     setReminderDate(new Date());
     setReminderTime('09:00');
   };
@@ -111,6 +113,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
           deadline: deadline || new Date(),
           priority,
           completed: false,
+          duration: parseInt(taskDuration) || undefined,
           createdAt,
         } as Task;
         break;
@@ -125,7 +128,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
           type: 'event',
           title: title.trim(),
           startTime: eventStartTime,
-          duration: parseInt(duration),
+          duration: parseInt(eventDuration),
           synced: false,
           createdAt,
         } as Event;
@@ -265,6 +268,25 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
                   </Select>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Timp estimat</Label>
+                <Select value={taskDuration} onValueChange={setTaskDuration}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover">
+                    <SelectItem value="15">15 min</SelectItem>
+                    <SelectItem value="30">30 min</SelectItem>
+                    <SelectItem value="45">45 min</SelectItem>
+                    <SelectItem value="60">1 oră</SelectItem>
+                    <SelectItem value="90">1.5 ore</SelectItem>
+                    <SelectItem value="120">2 ore</SelectItem>
+                    <SelectItem value="180">3 ore</SelectItem>
+                    <SelectItem value="240">4 ore</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </>
           )}
 
@@ -315,7 +337,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
 
                 <div className="space-y-2">
                   <Label>Durată</Label>
-                  <Select value={duration} onValueChange={setDuration}>
+                  <Select value={eventDuration} onValueChange={setEventDuration}>
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
