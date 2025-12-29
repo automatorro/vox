@@ -20,6 +20,7 @@ interface DbItem {
   google_id: string | null;
   time: string | null;
   notified: boolean | null;
+  category_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,6 +41,7 @@ const dbItemToItem = (dbItem: DbItem): Item => {
       priority: dbItem.priority ?? 'medium',
       completed: dbItem.completed ?? false,
       duration: dbItem.duration ?? undefined,
+      categoryId: dbItem.category_id ?? undefined,
     } as Task;
   }
 
@@ -113,6 +115,7 @@ export const useItems = (userId: string | undefined) => {
       dbData.priority = task.priority ?? 'medium';
       dbData.completed = task.completed ?? false;
       dbData.duration = task.duration ?? null;
+      dbData.category_id = task.categoryId ?? null;
     } else if (item.type === 'event') {
       const event = item as Omit<Event, 'id' | 'createdAt'>;
       dbData.start_time = event.startTime?.toISOString() ?? null;
@@ -155,6 +158,7 @@ export const useItems = (userId: string | undefined) => {
       dbData.priority = task.priority;
       dbData.completed = task.completed;
       dbData.duration = task.duration ?? null;
+      dbData.category_id = task.categoryId ?? null;
     } else if (item.type === 'event') {
       const event = item as Event;
       dbData.start_time = event.startTime?.toISOString() ?? null;

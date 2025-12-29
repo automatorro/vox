@@ -1,19 +1,21 @@
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { Item, Task } from "@/types";
+import { Category } from "@/hooks/useCategories";
 import { ItemCard } from "./ItemCard";
 import { AlertCircle } from "lucide-react";
 
 interface DayViewProps {
   date: Date;
   items: Item[];
+  categories?: Category[];
   overloaded?: boolean;
   onCompleteTask?: (id: string) => void;
   onEditItem?: (item: Item) => void;
   onDeleteItem?: (id: string) => void;
 }
 
-export const DayView = ({ date, items, overloaded, onCompleteTask, onEditItem, onDeleteItem }: DayViewProps) => {
+export const DayView = ({ date, items, categories, overloaded, onCompleteTask, onEditItem, onDeleteItem }: DayViewProps) => {
   const isToday = format(new Date(), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
   
   // Sort items by time/priority
@@ -89,7 +91,8 @@ export const DayView = ({ date, items, overloaded, onCompleteTask, onEditItem, o
               className="animate-fade-in-up"
             >
               <ItemCard 
-                item={item} 
+                item={item}
+                categories={categories}
                 onComplete={onCompleteTask}
                 onEdit={onEditItem}
                 onDelete={onDeleteItem}

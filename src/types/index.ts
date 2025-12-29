@@ -9,6 +9,7 @@ export interface Task {
   priority: Priority;
   completed: boolean;
   duration?: number; // estimated time in minutes
+  categoryId?: string;
   createdAt: Date;
 }
 

@@ -12,12 +12,14 @@ import { EditItemDrawer } from "@/components/EditItemDrawer";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { AIPrioritization } from "@/components/AIPrioritization";
+import { CategoryFilter } from "@/components/CategoryFilter";
 import { Item, Task, Event } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { useAuth } from "@/hooks/useAuth";
 import { useItems } from "@/hooks/useItems";
+import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
@@ -32,6 +34,7 @@ const Index = () => {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false);
   const [googleCalendarSettingsOpen, setGoogleCalendarSettingsOpen] = useState(false);
+  const [filterCategoryId, setFilterCategoryId] = useState<string | null>(null);
   const [notificationSettings, setNotificationSettings] = useState({
     pushEnabled: false,
     emailEnabled: false,
@@ -40,6 +43,7 @@ const Index = () => {
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, setItems } = useItems(user?.id);
+  const { categories, createCategory } = useCategories(user?.id);
 
   // Google Calendar integration
   const handleEventsImported = (importedEvents: Event[]) => {
@@ -102,7 +106,12 @@ const Index = () => {
   };
 
   const allTasks = items.filter(item => item.type === 'task') as Task[];
-  const todayItems = getItemsForDate(selectedDate);
+  const filteredItems = filterCategoryId 
+    ? items.filter(item => item.type === 'task' && (item as Task).categoryId === filterCategoryId)
+    : items;
+  const todayItems = getItemsForDate(selectedDate).filter(item => 
+    !filterCategoryId || (item.type === 'task' && (item as Task).categoryId === filterCategoryId)
+  );
   const isOverloaded = todayItems.length > 6;
 
   const handleReorderTasks = (orderedIds: string[]) => {
@@ -304,6 +313,15 @@ const Index = () => {
               <QuickStats items={todayItems} />
             </section>
 
+            {/* Category Filter */}
+            <section className="mb-4">
+              <CategoryFilter
+                categories={categories}
+                selectedCategoryId={filterCategoryId}
+                onSelect={setFilterCategoryId}
+              />
+            </section>
+
             {/* AI Prioritization */}
             <section className="mb-6">
               <AIPrioritization 
@@ -326,6 +344,7 @@ const Index = () => {
               <DayView 
                 date={selectedDate}
                 items={todayItems}
+                categories={categories}
                 overloaded={isOverloaded}
                 onCompleteTask={handleCompleteTask}
                 onEditItem={handleEditItem}
@@ -363,6 +382,8 @@ const Index = () => {
         open={createDrawerOpen}
         onOpenChange={setCreateDrawerOpen}
         onCreateItem={handleCreateItem}
+        categories={categories}
+        onCreateCategory={createCategory}
       />
 
       {/* Edit Item Drawer */}
@@ -371,6 +392,8 @@ const Index = () => {
         onOpenChange={setEditDrawerOpen}
         item={editingItem}
         onUpdateItem={handleUpdateItem}
+        categories={categories}
+        onCreateCategory={createCategory}
       />
 
       {/* Notification Settings */}
