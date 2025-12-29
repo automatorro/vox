@@ -26,6 +26,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { CategorySelect } from "@/components/CategorySelect";
+import { Category } from "@/hooks/useCategories";
 import { Task, Event, Reminder, Priority, Item } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,8 @@ interface EditItemDrawerProps {
   onOpenChange: (open: boolean) => void;
   item: Item | null;
   onUpdateItem: (item: Item) => void;
+  categories: Category[];
+  onCreateCategory: (name: string, color: string) => Promise<Category | null>;
 }
 
 const typeConfig = {
@@ -60,7 +64,7 @@ const typeConfig = {
   },
 };
 
-export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditItemDrawerProps) => {
+export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categories, onCreateCategory }: EditItemDrawerProps) => {
   // Common fields
   const [title, setTitle] = useState('');
   
@@ -69,6 +73,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
   const [deadline, setDeadline] = useState<Date | undefined>(new Date());
   const [priority, setPriority] = useState<Priority>('medium');
   const [taskDuration, setTaskDuration] = useState('30');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   
   // Event fields
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
@@ -91,6 +96,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
       setDeadline(new Date(task.deadline));
       setPriority(task.priority);
       setTaskDuration(task.duration?.toString() || '30');
+      setCategoryId(task.categoryId || null);
     } else if (item.type === 'event') {
       const event = item as Event;
       const eventDate = new Date(event.startTime);
@@ -119,6 +125,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
           deadline: deadline || new Date(),
           priority,
           duration: parseInt(taskDuration) || undefined,
+          categoryId: categoryId || undefined,
         };
         break;
       
@@ -275,6 +282,13 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem }: EditI
                   </SelectContent>
                 </Select>
               </div>
+
+              <CategorySelect
+                categories={categories}
+                selectedCategoryId={categoryId}
+                onSelect={setCategoryId}
+                onCreateCategory={onCreateCategory}
+              />
             </>
           )}
 

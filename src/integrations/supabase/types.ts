@@ -14,8 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          color: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items: {
         Row: {
+          category_id: string | null
           completed: boolean | null
           created_at: string
           deadline: string | null
@@ -34,6 +67,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category_id?: string | null
           completed?: boolean | null
           created_at?: string
           deadline?: string | null
@@ -52,6 +86,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category_id?: string | null
           completed?: boolean | null
           created_at?: string
           deadline?: string | null
@@ -70,6 +105,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "items_user_id_fkey"
             columns: ["user_id"]

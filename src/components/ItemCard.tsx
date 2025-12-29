@@ -1,5 +1,6 @@
-import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen } from "lucide-react";
 import { Task, Event, Reminder, Priority } from "@/types";
+import { Category } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 
 interface ItemCardProps {
   item: Task | Event | Reminder;
+  categories?: Category[];
   onComplete?: (id: string) => void;
   onEdit?: (item: Task | Event | Reminder) => void;
   onDelete?: (id: string) => void;
@@ -25,10 +27,14 @@ const priorityConfig: Record<Priority, { label: string; className: string }> = {
   critical: { label: 'Critical', className: 'bg-destructive/20 text-destructive' },
 };
 
-export const ItemCard = ({ item, onComplete, onEdit, onDelete }: ItemCardProps) => {
+export const ItemCard = ({ item, categories, onComplete, onEdit, onDelete }: ItemCardProps) => {
   const isTask = item.type === 'task';
   const isEvent = item.type === 'event';
   const isReminder = item.type === 'reminder';
+  
+  const taskCategory = isTask && (item as Task).categoryId 
+    ? categories?.find(c => c.id === (item as Task).categoryId)
+    : null;
 
   const getTypeStyles = () => {
     if (isTask) return 'border-l-task bg-task-muted/30';
@@ -119,6 +125,15 @@ export const ItemCard = ({ item, onComplete, onEdit, onDelete }: ItemCardProps) 
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Timer className="h-3 w-3" />
                   {formatDuration((item as Task).duration!)}
+                </span>
+              )}
+              {taskCategory && (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: taskCategory.color }}
+                  />
+                  {taskCategory.name}
                 </span>
               )}
             </>

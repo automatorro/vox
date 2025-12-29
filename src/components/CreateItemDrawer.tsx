@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { CalendarIcon, Clock, Plus, X, CheckCircle2, Calendar, Bell } from "lucide-react";
+import { CalendarIcon, Clock, Plus, CheckCircle2, Calendar, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,10 +26,20 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { CategorySelect } from "@/components/CategorySelect";
+import { Category } from "@/hooks/useCategories";
 import { Task, Event, Reminder, Priority, Item } from "@/types";
 import { cn } from "@/lib/utils";
 
 type ItemType = 'task' | 'event' | 'reminder';
+
+interface CreateItemDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreateItem: (item: Item) => void;
+  categories: Category[];
+  onCreateCategory: (name: string, color: string) => Promise<Category | null>;
+}
 
 interface CreateItemDrawerProps {
   open: boolean;
@@ -61,7 +71,7 @@ const typeConfig = {
   },
 };
 
-export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateItemDrawerProps) => {
+export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories, onCreateCategory }: CreateItemDrawerProps) => {
   const [selectedType, setSelectedType] = useState<ItemType>('task');
   
   // Common fields
@@ -72,6 +82,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
   const [deadline, setDeadline] = useState<Date | undefined>(new Date());
   const [priority, setPriority] = useState<Priority>('medium');
   const [taskDuration, setTaskDuration] = useState('30');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   
   // Event fields
   const [startDate, setStartDate] = useState<Date | undefined>(new Date());
@@ -88,6 +99,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
     setDeadline(new Date());
     setPriority('medium');
     setTaskDuration('30');
+    setCategoryId(null);
     setStartDate(new Date());
     setStartTime('10:00');
     setEventDuration('60');
@@ -114,6 +126,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
           priority,
           completed: false,
           duration: parseInt(taskDuration) || undefined,
+          categoryId: categoryId || undefined,
           createdAt,
         } as Task;
         break;
@@ -287,6 +300,13 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem }: CreateIte
                   </SelectContent>
                 </Select>
               </div>
+
+              <CategorySelect
+                categories={categories}
+                selectedCategoryId={categoryId}
+                onSelect={setCategoryId}
+                onCreateCategory={onCreateCategory}
+              />
             </>
           )}
 
