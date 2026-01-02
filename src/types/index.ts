@@ -66,9 +66,27 @@ export interface VoiceAISuggestion {
   suggestedValue?: string;
 }
 
+export interface VoiceQueryResult {
+  id: string;
+  title: string;
+  type: string;
+  time: string;
+  priority?: string;
+}
+
+export interface VoicePlanSuggestion {
+  order: number;
+  itemId?: string;
+  action: 'do first' | 'postpone' | 'delegate' | 'break down' | 'time block';
+  reason: string;
+}
+
 export interface VoiceParseResult {
-  intent: 'create' | 'modify' | 'delete' | 'query';
+  intent: 'create' | 'modify' | 'delete' | 'query' | 'plan';
   item: VoiceParsedItem;
+  conversationalResponse?: string;
+  queryResults?: VoiceQueryResult[];
+  planSuggestions?: VoicePlanSuggestion[];
   warnings: VoiceAIWarning[];
   suggestions: VoiceAISuggestion[];
   confidence: number;

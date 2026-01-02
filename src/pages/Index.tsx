@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { isSameDay } from "date-fns";
-import { LayoutDashboard, CalendarDays, Plus, LogOut } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
+import { VoiceConversationalModal } from "@/components/VoiceConversationalModal";
 import { DayView } from "@/components/DayView";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
@@ -23,7 +24,6 @@ import { useItems } from "@/hooks/useItems";
 import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
 
 type ViewMode = 'dashboard' | 'calendar';
 
@@ -42,6 +42,7 @@ const Index = () => {
     email: '',
   });
   const [voiceConfirmationOpen, setVoiceConfirmationOpen] = useState(false);
+  const [voiceConversationalOpen, setVoiceConversationalOpen] = useState(false);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
@@ -380,7 +381,12 @@ const Index = () => {
         <VoiceButton 
           onParseComplete={(result) => {
             setVoiceParseResult(result);
-            setVoiceConfirmationOpen(true);
+            // Open different modal based on intent
+            if (result.intent === 'query' || result.intent === 'plan') {
+              setVoiceConversationalOpen(true);
+            } else {
+              setVoiceConfirmationOpen(true);
+            }
           }}
           existingItems={items}
           categories={categories}
@@ -395,6 +401,13 @@ const Index = () => {
         categories={categories}
         onConfirm={handleCreateItem}
         onCancel={() => setVoiceParseResult(null)}
+      />
+
+      {/* Voice Conversational Modal */}
+      <VoiceConversationalModal
+        open={voiceConversationalOpen}
+        onOpenChange={setVoiceConversationalOpen}
+        parseResult={voiceParseResult}
       />
 
       {/* Create Item Drawer */}
