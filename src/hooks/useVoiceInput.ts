@@ -1,22 +1,46 @@
 import { useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Item, Task, Event, Reminder } from "@/types";
+import { Item, VoiceParseResult, VoiceParsedItem } from "@/types";
+import { Category } from "@/hooks/useCategories";
 
 interface UseVoiceInputProps {
-  onItemCreated: (item: Item) => void;
+  onParseComplete: (result: VoiceParseResult) => void;
   onError: (error: string) => void;
   onListening: (listening: boolean) => void;
   onTranscript: (transcript: string) => void;
+  existingItems?: Item[];
+  categories?: Category[];
 }
 
+// Language detection based on common words
+const detectLanguage = (text: string): 'ro-RO' | 'en-US' => {
+  const romanianIndicators = [
+    'azi', 'mâine', 'poimâine', 'acum', 'urgent', 'important',
+    'task', 'sarcină', 'întâlnire', 'amintește', 'adaugă',
+    'dimineață', 'seară', 'prânz', 'ora', 'minute',
+    'luni', 'marți', 'miercuri', 'joi', 'vineri', 'sâmbătă', 'duminică',
+    'și', 'la', 'de', 'cu', 'pentru', 'în'
+  ];
+  
+  const lowerText = text.toLowerCase();
+  const romanianCount = romanianIndicators.filter(word => lowerText.includes(word)).length;
+  
+  // If we detect Romanian words, use Romanian
+  return romanianCount >= 1 ? 'ro-RO' : 'en-US';
+};
+
 export const useVoiceInput = ({
-  onItemCreated,
+  onParseComplete,
   onError,
   onListening,
   onTranscript,
+  existingItems = [],
+  categories = [],
 }: UseVoiceInputProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<'ro-RO' | 'en-US'>('ro-RO');
   const recognitionRef = useRef<any>(null);
+  const finalTranscriptRef = useRef<string>("");
 
   const startListening = useCallback(() => {
     // Check if Speech Recognition is supported
@@ -28,28 +52,45 @@ export const useVoiceInput = ({
     }
 
     const recognition = new SpeechRecognitionAPI();
+    // Start with Romanian, will adapt based on interim results
     recognition.lang = "ro-RO";
     recognition.continuous = false;
     recognition.interimResults = true;
 
     recognition.onstart = () => {
       onListening(true);
+      finalTranscriptRef.current = "";
     };
 
-    recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((result) => result[0].transcript)
-        .join("");
-      
-      onTranscript(transcript);
+    recognition.onresult = (event: any) => {
+      let interimTranscript = "";
+      let finalTranscript = "";
 
-      // Only process final results
-      if (event.results[event.results.length - 1].isFinal) {
-        processTranscript(transcript);
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update detected language based on content
+      const combinedTranscript = finalTranscript || interimTranscript;
+      if (combinedTranscript.length > 5) {
+        const detected = detectLanguage(combinedTranscript);
+        setDetectedLanguage(detected);
+      }
+
+      onTranscript(finalTranscript || interimTranscript);
+
+      if (finalTranscript) {
+        finalTranscriptRef.current = finalTranscript;
+        processTranscript(finalTranscript);
       }
     };
 
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
       onListening(false);
       
@@ -84,8 +125,42 @@ export const useVoiceInput = ({
     setIsProcessing(true);
 
     try {
+      // Prepare context for AI
+      const today = new Date();
+      const todayItems = existingItems.filter(item => {
+        const itemDate = item.type === 'task' 
+          ? (item as any).deadline 
+          : item.type === 'event' 
+            ? (item as any).startTime 
+            : (item as any).time;
+        const date = new Date(itemDate);
+        return date.toDateString() === today.toDateString();
+      });
+
+      const context = {
+        transcript,
+        language: detectedLanguage,
+        existingItems: todayItems.map(item => ({
+          id: item.id,
+          type: item.type,
+          title: item.title,
+          time: item.type === 'task' 
+            ? (item as any).deadline 
+            : item.type === 'event' 
+              ? (item as any).startTime 
+              : (item as any).time,
+          priority: item.type === 'task' ? (item as any).priority : undefined,
+        })),
+        categories: categories.map(cat => ({
+          id: cat.id,
+          name: cat.name,
+          color: cat.color,
+        })),
+        todayItemCount: todayItems.length,
+      };
+
       const { data, error } = await supabase.functions.invoke("parse-voice-input", {
-        body: { transcript },
+        body: context,
       });
 
       if (error) {
@@ -96,46 +171,18 @@ export const useVoiceInput = ({
         throw new Error(data.error);
       }
 
-      const parsedItem = data.item;
-      
-      // Create the item with proper structure
-      const now = new Date();
-      const id = `voice-${Date.now()}`;
+      // Return the full parse result for confirmation
+      const parseResult: VoiceParseResult = {
+        intent: data.intent || 'create',
+        item: data.item,
+        warnings: data.warnings || [],
+        suggestions: data.suggestions || [],
+        confidence: data.confidence || 0.9,
+        requiresConfirmation: data.requiresConfirmation ?? true,
+        transcript,
+      };
 
-      let newItem: Item;
-
-      if (parsedItem.type === "task") {
-        newItem = {
-          id,
-          type: "task",
-          title: parsedItem.title,
-          deadline: new Date(parsedItem.deadline || now),
-          priority: parsedItem.priority || "medium",
-          completed: false,
-          createdAt: now,
-        } as Task;
-      } else if (parsedItem.type === "event") {
-        newItem = {
-          id,
-          type: "event",
-          title: parsedItem.title,
-          startTime: new Date(parsedItem.startTime || now),
-          duration: parsedItem.duration || 60,
-          synced: false,
-          createdAt: now,
-        } as Event;
-      } else {
-        newItem = {
-          id,
-          type: "reminder",
-          title: parsedItem.title,
-          time: new Date(parsedItem.time || now),
-          notified: false,
-          createdAt: now,
-        } as Reminder;
-      }
-
-      onItemCreated(newItem);
+      onParseComplete(parseResult);
     } catch (error) {
       console.error("Error processing voice input:", error);
       onError(error instanceof Error ? error.message : "Eroare la procesarea comenzii vocale.");
@@ -148,5 +195,6 @@ export const useVoiceInput = ({
     startListening,
     stopListening,
     isProcessing,
+    detectedLanguage,
   };
 };
