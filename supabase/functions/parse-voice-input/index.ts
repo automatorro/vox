@@ -81,9 +81,10 @@ INTENT DETECTION:
 - "create": Adding new items (adaugă, creează, am, vreau, pune, add, create, schedule)
 - "modify": Changing existing items (mută, schimbă, modifică, change, move, update)
 - "delete": Removing items (șterge, anulează, remove, delete, cancel)
-- "query": Asking questions (ce am, când, cât, what do I have, when)
+- "query": Asking questions about schedule (ce am, când, cât, am ceva, sunt liber, what do I have, when, am I free, do I have)
+- "plan": Asking for organization advice (cum să organizez, cum ar trebui, sfat, recomandă, how should I organize, suggest, recommend, plan my day)
 
-ITEM PARSING RULES:
+ITEM PARSING RULES (for create/modify/delete intents):
 - Detect type: task (something to do), event (scheduled with duration), reminder (notification)
 - Extract title from main content
 - For tasks: deadline (default today if not specified), priority based on urgency words
@@ -121,9 +122,23 @@ CONFIDENCE SCORING:
 - 0.5-0.7: Significant assumptions made
 - <0.5: Very unclear, definitely needs confirmation
 
+FOR QUERY INTENT:
+When user asks about their schedule (e.g., "Ce am de făcut azi?", "Sunt liber mâine la 3?", "Am ceva programat?"):
+- Analyze the existing items and provide a helpful response
+- Set "conversationalResponse" with a natural language answer
+- Include relevant items in the response
+- No item creation needed
+
+FOR PLAN INTENT:
+When user asks for organization advice (e.g., "Cum ar trebui să-mi organizez ziua?", "Ce să fac prima dată?"):
+- Analyze all existing items, their priorities, deadlines
+- Provide actionable advice in "conversationalResponse"
+- Suggest optimal order, time blocks, or reorganization
+- Include specific suggestions
+
 Return ONLY valid JSON:
 {
-  "intent": "create" | "modify" | "delete" | "query",
+  "intent": "create" | "modify" | "delete" | "query" | "plan",
   "item": {
     "type": "task" | "event" | "reminder",
     "title": "string",
@@ -134,6 +149,24 @@ Return ONLY valid JSON:
     "time": "ISO date" (reminders only),
     "categoryId": "string or null"
   },
+  "conversationalResponse": "string - natural language response for query/plan intents, in ${isRomanian ? 'Romanian' : 'English'}",
+  "queryResults": [
+    {
+      "id": "string",
+      "title": "string", 
+      "type": "string",
+      "time": "string",
+      "priority": "string (optional)"
+    }
+  ],
+  "planSuggestions": [
+    {
+      "order": number,
+      "itemId": "string (if existing item)" or null,
+      "action": "do first" | "postpone" | "delegate" | "break down" | "time block",
+      "reason": "string explaining why"
+    }
+  ],
   "warnings": [
     {
       "type": "conflict" | "overload" | "deadline" | "suggestion",
@@ -149,7 +182,7 @@ Return ONLY valid JSON:
     }
   ],
   "confidence": 0.0-1.0,
-  "requiresConfirmation": true/false (true if confidence < 0.8 or has warnings)
+  "requiresConfirmation": true/false (true for create/modify/delete, false for query/plan)
 }`;
 
     console.log("Processing voice input:", transcript);
@@ -211,10 +244,14 @@ Return ONLY valid JSON:
     const result = {
       intent: parsedResult.intent || 'create',
       item: parsedResult.item || parsedResult,
+      conversationalResponse: parsedResult.conversationalResponse || null,
+      queryResults: parsedResult.queryResults || [],
+      planSuggestions: parsedResult.planSuggestions || [],
       warnings: parsedResult.warnings || [],
       suggestions: parsedResult.suggestions || [],
       confidence: parsedResult.confidence || 0.9,
-      requiresConfirmation: parsedResult.requiresConfirmation ?? (parsedResult.confidence < 0.8 || (parsedResult.warnings?.length > 0)),
+      requiresConfirmation: parsedResult.requiresConfirmation ?? 
+        (['create', 'modify', 'delete'].includes(parsedResult.intent) && (parsedResult.confidence < 0.8 || (parsedResult.warnings?.length > 0))),
     };
 
     console.log("Parsed result:", JSON.stringify(result, null, 2));

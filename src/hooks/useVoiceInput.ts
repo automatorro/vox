@@ -125,8 +125,24 @@ export const useVoiceInput = ({
     setIsProcessing(true);
 
     try {
-      // Prepare context for AI
+      // Prepare context for AI - include all items for queries
       const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      // For better context, include items from today and upcoming week
+      const relevantItems = existingItems.filter(item => {
+        const itemDate = item.type === 'task' 
+          ? (item as any).deadline 
+          : item.type === 'event' 
+            ? (item as any).startTime 
+            : (item as any).time;
+        const date = new Date(itemDate);
+        const weekFromNow = new Date(today);
+        weekFromNow.setDate(weekFromNow.getDate() + 7);
+        return date >= today && date <= weekFromNow;
+      });
+
       const todayItems = existingItems.filter(item => {
         const itemDate = item.type === 'task' 
           ? (item as any).deadline 
@@ -140,7 +156,7 @@ export const useVoiceInput = ({
       const context = {
         transcript,
         language: detectedLanguage,
-        existingItems: todayItems.map(item => ({
+        existingItems: relevantItems.map(item => ({
           id: item.id,
           type: item.type,
           title: item.title,
@@ -150,6 +166,7 @@ export const useVoiceInput = ({
               ? (item as any).startTime 
               : (item as any).time,
           priority: item.type === 'task' ? (item as any).priority : undefined,
+          completed: item.type === 'task' ? (item as any).completed : undefined,
         })),
         categories: categories.map(cat => ({
           id: cat.id,
@@ -175,6 +192,9 @@ export const useVoiceInput = ({
       const parseResult: VoiceParseResult = {
         intent: data.intent || 'create',
         item: data.item,
+        conversationalResponse: data.conversationalResponse || undefined,
+        queryResults: data.queryResults || [],
+        planSuggestions: data.planSuggestions || [],
         warnings: data.warnings || [],
         suggestions: data.suggestions || [],
         confidence: data.confidence || 0.9,
