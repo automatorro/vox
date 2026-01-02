@@ -3,6 +3,7 @@ import { isSameDay } from "date-fns";
 import { LayoutDashboard, CalendarDays, Plus, LogOut } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
+import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
 import { DayView } from "@/components/DayView";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
@@ -13,7 +14,7 @@ import { NotificationSettings } from "@/components/NotificationSettings";
 import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { AIPrioritization } from "@/components/AIPrioritization";
 import { CategoryFilter } from "@/components/CategoryFilter";
-import { Item, Task, Event } from "@/types";
+import { Item, Task, Event, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
@@ -40,6 +41,8 @@ const Index = () => {
     emailEnabled: false,
     email: '',
   });
+  const [voiceConfirmationOpen, setVoiceConfirmationOpen] = useState(false);
+  const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, setItems } = useItems(user?.id);
@@ -374,8 +377,25 @@ const Index = () => {
         </Button>
 
         {/* Voice Button */}
-        <VoiceButton onItemCreated={handleCreateItem} />
+        <VoiceButton 
+          onParseComplete={(result) => {
+            setVoiceParseResult(result);
+            setVoiceConfirmationOpen(true);
+          }}
+          existingItems={items}
+          categories={categories}
+        />
       </div>
+
+      {/* Voice Confirmation Modal */}
+      <VoiceConfirmationModal
+        open={voiceConfirmationOpen}
+        onOpenChange={setVoiceConfirmationOpen}
+        parseResult={voiceParseResult}
+        categories={categories}
+        onConfirm={handleCreateItem}
+        onCancel={() => setVoiceParseResult(null)}
+      />
 
       {/* Create Item Drawer */}
       <CreateItemDrawer

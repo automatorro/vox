@@ -2,30 +2,28 @@ import { Mic, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
-import { Item } from "@/types";
+import { Item, VoiceParseResult } from "@/types";
+import { Category } from "@/hooks/useCategories";
 import { useToast } from "@/hooks/use-toast";
 
 interface VoiceButtonProps {
-  onItemCreated: (item: Item) => void;
+  onParseComplete: (result: VoiceParseResult) => void;
+  existingItems?: Item[];
+  categories?: Category[];
 }
 
-export const VoiceButton = ({ onItemCreated }: VoiceButtonProps) => {
+export const VoiceButton = ({ 
+  onParseComplete, 
+  existingItems = [], 
+  categories = [] 
+}: VoiceButtonProps) => {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const { toast } = useToast();
 
-  const { startListening, stopListening, isProcessing } = useVoiceInput({
-    onItemCreated: (item) => {
-      const typeLabels = {
-        task: "Task",
-        event: "Eveniment",
-        reminder: "Reminder",
-      };
-      toast({
-        title: `${typeLabels[item.type]} creat prin voce! 🎤`,
-        description: item.title,
-      });
-      onItemCreated(item);
+  const { startListening, stopListening, isProcessing, detectedLanguage } = useVoiceInput({
+    onParseComplete: (result) => {
+      onParseComplete(result);
       setTranscript("");
     },
     onError: (error) => {
@@ -38,6 +36,8 @@ export const VoiceButton = ({ onItemCreated }: VoiceButtonProps) => {
     },
     onListening: setIsListening,
     onTranscript: setTranscript,
+    existingItems,
+    categories,
   });
 
   const handleClick = () => {
@@ -51,7 +51,7 @@ export const VoiceButton = ({ onItemCreated }: VoiceButtonProps) => {
   const getStatusText = () => {
     if (isProcessing) return "Procesez...";
     if (isListening && transcript) return `"${transcript}"`;
-    if (isListening) return "Te ascult...";
+    if (isListening) return detectedLanguage === 'en-US' ? "Listening..." : "Te ascult...";
     return "Spune ce ai de făcut";
   };
 

@@ -41,3 +41,37 @@ export interface DaySchedule {
   overloaded: boolean;
   conflicts: string[];
 }
+
+// Voice AI types
+export interface VoiceParsedItem {
+  type: 'task' | 'event' | 'reminder';
+  title: string;
+  deadline?: string;
+  priority?: Priority;
+  startTime?: string;
+  duration?: number;
+  time?: string;
+  categoryId?: string;
+}
+
+export interface VoiceAIWarning {
+  type: 'conflict' | 'overload' | 'deadline' | 'suggestion';
+  message: string;
+  severity: 'info' | 'warning' | 'error';
+}
+
+export interface VoiceAISuggestion {
+  action: 'reschedule' | 'priority' | 'category' | 'duration';
+  message: string;
+  suggestedValue?: string;
+}
+
+export interface VoiceParseResult {
+  intent: 'create' | 'modify' | 'delete' | 'query';
+  item: VoiceParsedItem;
+  warnings: VoiceAIWarning[];
+  suggestions: VoiceAISuggestion[];
+  confidence: number;
+  requiresConfirmation: boolean;
+  transcript: string;
+}
