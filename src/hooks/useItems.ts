@@ -13,6 +13,7 @@ interface DbItem {
   description: string | null;
   deadline: string | null;
   priority: DbPriority | null;
+  importance: 'low' | 'high' | null;
   completed: boolean | null;
   start_time: string | null;
   duration: number | null;
@@ -39,6 +40,7 @@ const dbItemToItem = (dbItem: DbItem): Item => {
       description: dbItem.description ?? undefined,
       deadline: dbItem.deadline ? new Date(dbItem.deadline) : new Date(),
       priority: dbItem.priority ?? 'medium',
+      importance: dbItem.importance ?? 'low',
       completed: dbItem.completed ?? false,
       duration: dbItem.duration ?? undefined,
       categoryId: dbItem.category_id ?? undefined,
@@ -113,6 +115,7 @@ export const useItems = (userId: string | undefined) => {
       dbData.description = task.description ?? null;
       dbData.deadline = task.deadline?.toISOString() ?? null;
       dbData.priority = task.priority ?? 'medium';
+      dbData.importance = task.importance ?? 'low';
       dbData.completed = task.completed ?? false;
       dbData.duration = task.duration ?? null;
       dbData.category_id = task.categoryId ?? null;
@@ -156,6 +159,7 @@ export const useItems = (userId: string | undefined) => {
       dbData.description = task.description ?? null;
       dbData.deadline = task.deadline?.toISOString() ?? null;
       dbData.priority = task.priority;
+      dbData.importance = task.importance;
       dbData.completed = task.completed;
       dbData.duration = task.duration ?? null;
       dbData.category_id = task.categoryId ?? null;

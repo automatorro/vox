@@ -7,6 +7,7 @@ export interface Task {
   description?: string;
   deadline: Date;
   priority: Priority;
+  importance: 'low' | 'high';
   completed: boolean;
   duration?: number; // estimated time in minutes
   categoryId?: string;

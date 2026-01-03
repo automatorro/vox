@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { isSameDay } from "date-fns";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -16,6 +16,7 @@ import { NotificationSettings } from "@/components/NotificationSettings";
 import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { AIPrioritization } from "@/components/AIPrioritization";
 import { CategoryFilter } from "@/components/CategoryFilter";
+import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
 import { Item, Task, Event, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -26,7 +27,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type ViewMode = 'dashboard' | 'calendar';
+type ViewMode = 'dashboard' | 'calendar' | 'matrix';
 
 const Index = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -55,7 +56,7 @@ const Index = () => {
   const handleEventsImported = (importedEvents: Event[]) => {
     setItems(prev => {
       // Remove old synced events and add new ones
-      const nonSyncedItems = prev.filter(item => 
+      const nonSyncedItems = prev.filter(item =>
         item.type !== 'event' || !(item as Event).synced
       );
       return [...nonSyncedItems, ...importedEvents];
@@ -102,20 +103,20 @@ const Index = () => {
 
   const getItemsForDate = (date: Date) => {
     return items.filter(item => {
-      const itemDate = item.type === 'task' 
-        ? (item as Task).deadline 
-        : item.type === 'event' 
-          ? (item as Event).startTime 
+      const itemDate = item.type === 'task'
+        ? (item as Task).deadline
+        : item.type === 'event'
+          ? (item as Event).startTime
           : (item as any).time;
       return isSameDay(new Date(itemDate), date);
     });
   };
 
   const allTasks = items.filter(item => item.type === 'task') as Task[];
-  const filteredItems = filterCategoryId 
+  const filteredItems = filterCategoryId
     ? items.filter(item => item.type === 'task' && (item as Task).categoryId === filterCategoryId)
     : items;
-  const todayItems = getItemsForDate(selectedDate).filter(item => 
+  const todayItems = getItemsForDate(selectedDate).filter(item =>
     !filterCategoryId || (item.type === 'task' && (item as Task).categoryId === filterCategoryId)
   );
   const isOverloaded = todayItems.length > 6;
@@ -137,10 +138,10 @@ const Index = () => {
   const handleCompleteTask = async (id: string) => {
     const item = items.find(i => i.id === id);
     if (!item || item.type !== 'task') return;
-    
+
     const task = item as Task;
     const success = await toggleTaskComplete(id);
-    
+
     if (success) {
       toast({
         title: !task.completed ? "Task completat! 🎉" : "Task reactivat",
@@ -176,14 +177,14 @@ const Index = () => {
     };
 
     const created = await createItem(itemToCreate);
-    
+
     if (created) {
       const typeLabels = {
         task: 'Task',
         event: 'Eveniment',
         reminder: 'Reminder'
       };
-      
+
       toast({
         title: `${typeLabels[created.type]} creat!`,
         description: created.title,
@@ -198,14 +199,14 @@ const Index = () => {
 
   const handleUpdateItem = async (updatedItem: Item) => {
     const success = await updateItem(updatedItem);
-    
+
     if (success) {
       const typeLabels = {
         task: 'Task',
         event: 'Eveniment',
         reminder: 'Reminder'
       };
-      
+
       toast({
         title: `${typeLabels[updatedItem.type]} actualizat!`,
         description: updatedItem.title,
@@ -223,14 +224,14 @@ const Index = () => {
     }
 
     const success = await deleteItem(id);
-    
+
     if (success) {
       const typeLabels = {
         task: 'Task',
         event: 'Eveniment',
         reminder: 'Reminder'
       };
-      
+
       toast({
         title: `${typeLabels[item.type]} șters!`,
         description: item.title,
@@ -259,13 +260,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header 
+      <Header
         onCalendarClick={handleCalendarClick}
         onSettingsClick={() => setNotificationSettingsOpen(true)}
         onGoogleCalendarClick={() => setGoogleCalendarSettingsOpen(true)}
         isGoogleConnected={isGoogleConnected}
       />
-      
+
       {/* User info & View Toggle */}
       <div className="px-6 mb-4 flex items-center justify-between">
         <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-card/50 border border-border">
@@ -293,6 +294,18 @@ const Index = () => {
             <CalendarDays className="h-4 w-4" />
             Calendar
           </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setViewMode('matrix')}
+            className={cn(
+              "gap-2 rounded-lg transition-all",
+              viewMode === 'matrix' && "bg-primary text-primary-foreground hover:bg-primary/90"
+            )}
+          >
+            <Grid className="h-4 w-4" />
+            Matrix
+          </Button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -306,7 +319,7 @@ const Index = () => {
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="hidden sm:inline">Rezumat AI</span>
           </Button>
-          
+
           <span className="text-sm text-muted-foreground">
             {profile?.full_name || user?.email}
           </span>
@@ -341,7 +354,7 @@ const Index = () => {
 
             {/* AI Prioritization */}
             <section className="mb-6">
-              <AIPrioritization 
+              <AIPrioritization
                 tasks={allTasks}
                 onReorder={handleReorderTasks}
               />
@@ -349,7 +362,7 @@ const Index = () => {
 
             {/* Mini Calendar */}
             <section className="mb-6">
-              <MiniCalendar 
+              <MiniCalendar
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
                 items={items}
@@ -358,7 +371,7 @@ const Index = () => {
 
             {/* Day View */}
             <section>
-              <DayView 
+              <DayView
                 date={selectedDate}
                 items={todayItems}
                 categories={categories}
@@ -369,11 +382,16 @@ const Index = () => {
               />
             </section>
           </>
-        ) : (
-          <MonthCalendar 
+        ) : viewMode === 'calendar' ? (
+          <MonthCalendar
             items={items}
             selectedDate={selectedDate}
             onDaySelect={handleDaySelectFromCalendar}
+          />
+        ) : (
+          <EisenhowerMatrix
+            tasks={allTasks}
+            onUpdateTask={(task) => handleUpdateItem(task)}
           />
         )}
       </main>
@@ -391,7 +409,7 @@ const Index = () => {
         </Button>
 
         {/* Voice Button */}
-        <VoiceButton 
+        <VoiceButton
           onParseComplete={(result) => {
             setVoiceParseResult(result);
             // All intents now go to conversational modal which handles create too

@@ -21,10 +21,10 @@ const detectLanguage = (text: string): 'ro-RO' | 'en-US' => {
     'luni', 'marți', 'miercuri', 'joi', 'vineri', 'sâmbătă', 'duminică',
     'și', 'la', 'de', 'cu', 'pentru', 'în'
   ];
-  
+
   const lowerText = text.toLowerCase();
   const romanianCount = romanianIndicators.filter(word => lowerText.includes(word)).length;
-  
+
   // If we detect Romanian words, use Romanian
   return romanianCount >= 1 ? 'ro-RO' : 'en-US';
 };
@@ -45,7 +45,7 @@ export const useVoiceInput = ({
   const startListening = useCallback(() => {
     // Check if Speech Recognition is supported
     const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
+
     if (!SpeechRecognitionAPI) {
       onError("Browser-ul tău nu suportă recunoașterea vocală.");
       return;
@@ -93,7 +93,7 @@ export const useVoiceInput = ({
     recognition.onerror = (event: any) => {
       console.error("Speech recognition error:", event.error);
       onListening(false);
-      
+
       if (event.error === "not-allowed") {
         onError("Te rog să permiți accesul la microfon.");
       } else if (event.error === "no-speech") {
@@ -129,13 +129,13 @@ export const useVoiceInput = ({
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      
+
       // For better context, include items from today and upcoming week
       const relevantItems = existingItems.filter(item => {
-        const itemDate = item.type === 'task' 
-          ? (item as any).deadline 
-          : item.type === 'event' 
-            ? (item as any).startTime 
+        const itemDate = item.type === 'task'
+          ? (item as any).deadline
+          : item.type === 'event'
+            ? (item as any).startTime
             : (item as any).time;
         const date = new Date(itemDate);
         const weekFromNow = new Date(today);
@@ -144,10 +144,10 @@ export const useVoiceInput = ({
       });
 
       const todayItems = existingItems.filter(item => {
-        const itemDate = item.type === 'task' 
-          ? (item as any).deadline 
-          : item.type === 'event' 
-            ? (item as any).startTime 
+        const itemDate = item.type === 'task'
+          ? (item as any).deadline
+          : item.type === 'event'
+            ? (item as any).startTime
             : (item as any).time;
         const date = new Date(itemDate);
         return date.toDateString() === today.toDateString();
@@ -160,10 +160,10 @@ export const useVoiceInput = ({
           id: item.id,
           type: item.type,
           title: item.title,
-          time: item.type === 'task' 
-            ? (item as any).deadline 
-            : item.type === 'event' 
-              ? (item as any).startTime 
+          time: item.type === 'task'
+            ? (item as any).deadline
+            : item.type === 'event'
+              ? (item as any).startTime
               : (item as any).time,
           priority: item.type === 'task' ? (item as any).priority : undefined,
           completed: item.type === 'task' ? (item as any).completed : undefined,
@@ -176,7 +176,7 @@ export const useVoiceInput = ({
         todayItemCount: todayItems.length,
       };
 
-      const { data, error } = await supabase.functions.invoke("parse-voice-input", {
+      const { data, error } = await supabase.functions.invoke("ai-agent", {
         body: context,
       });
 
