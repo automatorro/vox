@@ -130,13 +130,15 @@ export const VoiceConfirmationModal = ({
   const selectedCategory = categories.find(c => c.id === editedItem.categoryId);
   const confidencePercent = Math.round((parseResult.confidence || 0.9) * 100);
 
+  const typeInfo = editedItem.type ? typeLabels[editedItem.type] : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <span>{typeLabels[editedItem.type].icon}</span>
-            <span>Confirmare {typeLabels[editedItem.type].label}</span>
+            <span>{typeInfo?.icon || "📝"}</span>
+            <span>Confirmare {typeInfo?.label || "Item"}</span>
             <Badge variant="outline" className="ml-auto text-xs">
               {confidencePercent}% încredere
             </Badge>
