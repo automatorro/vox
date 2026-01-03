@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { isSameDay } from "date-fns";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2 } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
 import { VoiceConversationalModal } from "@/components/VoiceConversationalModal";
+import { MorningSummaryModal } from "@/components/MorningSummaryModal";
 import { DayView } from "@/components/DayView";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
@@ -43,6 +44,7 @@ const Index = () => {
   });
   const [voiceConfirmationOpen, setVoiceConfirmationOpen] = useState(false);
   const [voiceConversationalOpen, setVoiceConversationalOpen] = useState(false);
+  const [morningSummaryOpen, setMorningSummaryOpen] = useState(false);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
@@ -294,6 +296,17 @@ const Index = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* AI Summary Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMorningSummaryOpen(true)}
+            className="gap-2"
+          >
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="hidden sm:inline">Rezumat AI</span>
+          </Button>
+          
           <span className="text-sm text-muted-foreground">
             {profile?.full_name || user?.email}
           </span>
@@ -408,6 +421,14 @@ const Index = () => {
         open={voiceConversationalOpen}
         onOpenChange={setVoiceConversationalOpen}
         parseResult={voiceParseResult}
+      />
+
+      {/* Morning Summary Modal */}
+      <MorningSummaryModal
+        open={morningSummaryOpen}
+        onOpenChange={setMorningSummaryOpen}
+        items={items}
+        userName={profile?.full_name || undefined}
       />
 
       {/* Create Item Drawer */}

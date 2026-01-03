@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.ai-prioritize]
 verify_jwt = false
+
+[functions.morning-summary]
+verify_jwt = false
