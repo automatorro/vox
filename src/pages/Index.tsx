@@ -394,33 +394,21 @@ const Index = () => {
         <VoiceButton 
           onParseComplete={(result) => {
             setVoiceParseResult(result);
-            // Open different modal based on intent
-            if (result.intent === 'query' || result.intent === 'plan') {
-              setVoiceConversationalOpen(true);
-            } else {
-              setVoiceConfirmationOpen(true);
-            }
+            // All intents now go to conversational modal which handles create too
+            setVoiceConversationalOpen(true);
           }}
           existingItems={items}
           categories={categories}
         />
       </div>
 
-      {/* Voice Confirmation Modal */}
-      <VoiceConfirmationModal
-        open={voiceConfirmationOpen}
-        onOpenChange={setVoiceConfirmationOpen}
-        parseResult={voiceParseResult}
-        categories={categories}
-        onConfirm={handleCreateItem}
-        onCancel={() => setVoiceParseResult(null)}
-      />
-
-      {/* Voice Conversational Modal */}
+      {/* Voice Conversational Modal - handles all intents including create */}
       <VoiceConversationalModal
         open={voiceConversationalOpen}
         onOpenChange={setVoiceConversationalOpen}
         parseResult={voiceParseResult}
+        categories={categories}
+        onConfirmCreate={handleCreateItem}
       />
 
       {/* Morning Summary Modal */}

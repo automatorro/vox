@@ -136,6 +136,13 @@ When user asks for organization advice (e.g., "Cum ar trebui să-mi organizez zi
 - Suggest optimal order, time blocks, or reorganization
 - Include specific suggestions
 
+CONVERSATIONAL RESPONSE (MANDATORY):
+ALWAYS include a natural, friendly "conversationalResponse" in ${isRomanian ? 'Romanian' : 'English'}, regardless of intent:
+- For "create": Confirm what you understood (e.g., "Am înțeles! Vrei să adaug task-ul 'Cumpărături' pentru mâine la ora 10.")
+- For "query": Answer the question naturally (e.g., "Mâine ai 3 programări: ...")
+- For "plan": Give helpful advice (e.g., "Pentru o zi productivă, îți recomand să începi cu...")
+- For "modify"/"delete": Confirm the action (e.g., "Am înțeles, vrei să ștergi...")
+
 Return ONLY valid JSON:
 {
   "intent": "create" | "modify" | "delete" | "query" | "plan",
@@ -149,7 +156,7 @@ Return ONLY valid JSON:
     "time": "ISO date" (reminders only),
     "categoryId": "string or null"
   },
-  "conversationalResponse": "string - natural language response for query/plan intents, in ${isRomanian ? 'Romanian' : 'English'}",
+  "conversationalResponse": "string - ALWAYS include a friendly, natural response confirming understanding",
   "queryResults": [
     {
       "id": "string",
