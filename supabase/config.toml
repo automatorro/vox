@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.morning-summary]
 verify_jwt = false
+
+[functions.ai-matrix]
+verify_jwt = false
+
+[functions.ai-agent]
+verify_jwt = false
