@@ -1,5 +1,5 @@
-import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen } from "lucide-react";
-import { Task, Event, Reminder, Priority } from "@/types";
+import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen, Repeat } from "lucide-react";
+import { Task, Event, Reminder, Priority, RecurrenceType } from "@/types";
 import { Category } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -25,6 +25,13 @@ const priorityConfig: Record<Priority, { label: string; className: string }> = {
   medium: { label: 'Medium', className: 'bg-task/20 text-task' },
   high: { label: 'High', className: 'bg-reminder/20 text-reminder' },
   critical: { label: 'Critical', className: 'bg-destructive/20 text-destructive' },
+};
+
+const recurrenceLabels: Record<RecurrenceType, string> = {
+  none: '',
+  daily: 'Zilnic',
+  weekly: 'Săptămânal',
+  monthly: 'Lunar',
 };
 
 export const ItemCard = ({ item, categories, onComplete, onEdit, onDelete }: ItemCardProps) => {
@@ -143,6 +150,14 @@ export const ItemCard = ({ item, categories, onComplete, onEdit, onDelete }: Ite
             <span className="text-xs text-event/70 flex items-center gap-1">
               <div className="w-1.5 h-1.5 rounded-full bg-event" />
               Sincronizat
+            </span>
+          )}
+
+          {/* Recurrence badge - for all types */}
+          {item.recurrenceType && item.recurrenceType !== 'none' && (
+            <span className="text-xs text-primary/70 flex items-center gap-1">
+              <Repeat className="h-3 w-3" />
+              {recurrenceLabels[item.recurrenceType]}
             </span>
           )}
         </div>

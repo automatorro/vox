@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, addDays, addWeeks, addMonths } from "date-fns";
 import { ro } from "date-fns/locale";
-import { CalendarIcon, Clock, Plus, CheckCircle2, Calendar, Bell } from "lucide-react";
+import { CalendarIcon, Clock, Plus, CheckCircle2, Calendar, Bell, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +28,7 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CategorySelect } from "@/components/CategorySelect";
 import { Category } from "@/hooks/useCategories";
-import { Task, Event, Reminder, Priority, Item } from "@/types";
+import { Task, Event, Reminder, Priority, Item, RecurrenceType } from "@/types";
 import { cn } from "@/lib/utils";
 
 type ItemType = 'task' | 'event' | 'reminder';
@@ -92,6 +92,10 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
   // Reminder fields
   const [reminderDate, setReminderDate] = useState<Date | undefined>(new Date());
   const [reminderTime, setReminderTime] = useState('09:00');
+  
+  // Recurrence fields
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>(undefined);
 
   const resetForm = () => {
     setTitle('');
@@ -105,6 +109,8 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
     setEventDuration('60');
     setReminderDate(new Date());
     setReminderTime('09:00');
+    setRecurrenceType('none');
+    setRecurrenceEndDate(undefined);
   };
 
   const handleSubmit = () => {
@@ -128,6 +134,8 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
           duration: parseInt(taskDuration) || undefined,
           categoryId: categoryId || undefined,
           createdAt,
+          recurrenceType,
+          recurrenceEndDate: recurrenceType !== 'none' ? recurrenceEndDate : undefined,
         } as Task;
         break;
       
@@ -144,6 +152,8 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
           duration: parseInt(eventDuration),
           synced: false,
           createdAt,
+          recurrenceType,
+          recurrenceEndDate: recurrenceType !== 'none' ? recurrenceEndDate : undefined,
         } as Event;
         break;
       
@@ -159,6 +169,8 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
           time: reminderDateTime,
           notified: false,
           createdAt,
+          recurrenceType,
+          recurrenceEndDate: recurrenceType !== 'none' ? recurrenceEndDate : undefined,
         } as Reminder;
         break;
     }
@@ -421,6 +433,55 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
               </div>
             </>
           )}
+
+          {/* Recurrence Section - For all types */}
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex items-center gap-2">
+              <Repeat className="h-4 w-4 text-muted-foreground" />
+              <Label>Recurență</Label>
+            </div>
+            <Select value={recurrenceType} onValueChange={(v) => setRecurrenceType(v as RecurrenceType)}>
+              <SelectTrigger className="bg-background">
+                <SelectValue placeholder="Fără recurență" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover">
+                <SelectItem value="none">Fără recurență</SelectItem>
+                <SelectItem value="daily">Zilnic</SelectItem>
+                <SelectItem value="weekly">Săptămânal</SelectItem>
+                <SelectItem value="monthly">Lunar</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {recurrenceType !== 'none' && (
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Până la data (opțional)</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-background",
+                        !recurrenceEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {recurrenceEndDate ? format(recurrenceEndDate, "d MMMM yyyy", { locale: ro }) : "Fără dată de final"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-popover" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={recurrenceEndDate}
+                      onSelect={setRecurrenceEndDate}
+                      initialFocus
+                      className="pointer-events-auto"
+                      disabled={(date) => date < new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Submit Button */}

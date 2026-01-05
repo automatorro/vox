@@ -11,7 +11,8 @@ import {
   ArrowRight,
   X,
   Check,
-  Loader2
+  Loader2,
+  Repeat
 } from "lucide-react";
 import {
   Dialog,
@@ -23,7 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { VoiceParseResult, VoiceQueryResult, VoicePlanSuggestion, Item, Task, Event, Reminder } from "@/types";
+import { VoiceParseResult, VoiceQueryResult, VoicePlanSuggestion, Item, Task, Event, Reminder, RecurrenceType } from "@/types";
 import { cn } from "@/lib/utils";
 import { Category } from "@/hooks/useCategories";
 
@@ -60,6 +61,13 @@ const actionLabels: Record<VoicePlanSuggestion['action'], { label: string; color
   'delegate': { label: "Delegă", color: "bg-purple-500/20 text-purple-400" },
   'break down': { label: "Împarte", color: "bg-blue-500/20 text-blue-400" },
   'time block': { label: "Bloc de timp", color: "bg-orange-500/20 text-orange-400" },
+};
+
+const recurrenceLabels: Record<RecurrenceType, string> = {
+  none: 'Fără recurență',
+  daily: 'Zilnic',
+  weekly: 'Săptămânal',
+  monthly: 'Lunar',
 };
 
 export const VoiceConversationalModal = ({
@@ -111,6 +119,9 @@ export const VoiceConversationalModal = ({
         completed: false,
         duration: item.duration,
         categoryId: item.categoryId,
+        importance: 'low',
+        recurrenceType: (item.recurrenceType as RecurrenceType) || 'none',
+        recurrenceEndDate: item.recurrenceEndDate ? new Date(item.recurrenceEndDate) : undefined,
       } as Omit<Task, 'id' | 'createdAt'>;
     }
 
@@ -121,6 +132,8 @@ export const VoiceConversationalModal = ({
         startTime: item.startTime ? new Date(item.startTime) : new Date(),
         duration: item.duration || 60,
         synced: false,
+        recurrenceType: (item.recurrenceType as RecurrenceType) || 'none',
+        recurrenceEndDate: item.recurrenceEndDate ? new Date(item.recurrenceEndDate) : undefined,
       } as Omit<Event, 'id' | 'createdAt'>;
     }
 
@@ -130,6 +143,8 @@ export const VoiceConversationalModal = ({
         title: item.title,
         time: item.time ? new Date(item.time) : new Date(),
         notified: false,
+        recurrenceType: (item.recurrenceType as RecurrenceType) || 'none',
+        recurrenceEndDate: item.recurrenceEndDate ? new Date(item.recurrenceEndDate) : undefined,
       } as Omit<Reminder, 'id' | 'createdAt'>;
     }
 
