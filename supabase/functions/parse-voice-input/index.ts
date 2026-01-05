@@ -143,6 +143,12 @@ ALWAYS include a natural, friendly "conversationalResponse" in ${isRomanian ? 'R
 - For "plan": Give helpful advice (e.g., "Pentru o zi productivă, îți recomand să începi cu...")
 - For "modify"/"delete": Confirm the action (e.g., "Am înțeles, vrei să ștergi...")
 
+RECURRENCE PARSING:
+- "zilnic", "în fiecare zi", "daily" → "daily"
+- "săptămânal", "în fiecare săptămână", "weekly" → "weekly"  
+- "lunar", "în fiecare lună", "monthly" → "monthly"
+- No recurrence mentioned → "none"
+
 Return ONLY valid JSON:
 {
   "intent": "create" | "modify" | "delete" | "query" | "plan",
@@ -154,7 +160,9 @@ Return ONLY valid JSON:
     "startTime": "ISO date" (events only),
     "duration": number in minutes (events only),
     "time": "ISO date" (reminders only),
-    "categoryId": "string or null"
+    "categoryId": "string or null",
+    "recurrenceType": "none" | "daily" | "weekly" | "monthly",
+    "recurrenceEndDate": "ISO date or null"
   },
   "conversationalResponse": "string - ALWAYS include a friendly, natural response confirming understanding",
   "queryResults": [

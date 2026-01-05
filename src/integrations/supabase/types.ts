@@ -57,7 +57,10 @@ export type Database = {
           google_id: string | null
           id: string
           notified: boolean | null
+          parent_item_id: string | null
           priority: Database["public"]["Enums"]["priority_level"] | null
+          recurrence_end_date: string | null
+          recurrence_type: string | null
           start_time: string | null
           synced: boolean | null
           time: string | null
@@ -76,7 +79,10 @@ export type Database = {
           google_id?: string | null
           id?: string
           notified?: boolean | null
+          parent_item_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"] | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           start_time?: string | null
           synced?: boolean | null
           time?: string | null
@@ -95,7 +101,10 @@ export type Database = {
           google_id?: string | null
           id?: string
           notified?: boolean | null
+          parent_item_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"] | null
+          recurrence_end_date?: string | null
+          recurrence_type?: string | null
           start_time?: string | null
           synced?: boolean | null
           time?: string | null
@@ -110,6 +119,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_parent_item_id_fkey"
+            columns: ["parent_item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
             referencedColumns: ["id"]
           },
           {

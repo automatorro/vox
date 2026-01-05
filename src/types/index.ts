@@ -1,6 +1,13 @@
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
 
-export interface Task {
+interface RecurrenceFields {
+  recurrenceType?: RecurrenceType;
+  recurrenceEndDate?: Date;
+  parentItemId?: string;
+}
+
+export interface Task extends RecurrenceFields {
   id: string;
   type: 'task';
   title: string;
@@ -14,7 +21,7 @@ export interface Task {
   createdAt: Date;
 }
 
-export interface Event {
+export interface Event extends RecurrenceFields {
   id: string;
   type: 'event';
   title: string;
@@ -25,7 +32,7 @@ export interface Event {
   createdAt: Date;
 }
 
-export interface Reminder {
+export interface Reminder extends RecurrenceFields {
   id: string;
   type: 'reminder';
   title: string;
@@ -53,6 +60,8 @@ export interface VoiceParsedItem {
   duration?: number;
   time?: string;
   categoryId?: string;
+  recurrenceType?: RecurrenceType;
+  recurrenceEndDate?: string;
 }
 
 export interface VoiceAIWarning {

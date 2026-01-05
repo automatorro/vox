@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Item, Task, Event, Reminder } from '@/types';
+import { Item, Task, Event, Reminder, RecurrenceType } from '@/types';
 
 type DbItemType = 'task' | 'event' | 'reminder';
 type DbPriority = 'low' | 'medium' | 'high' | 'critical';
+type DbRecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
 
 interface DbItem {
   id: string;
@@ -13,7 +14,6 @@ interface DbItem {
   description: string | null;
   deadline: string | null;
   priority: DbPriority | null;
-  importance: 'low' | 'high' | null;
   completed: boolean | null;
   start_time: string | null;
   duration: number | null;
@@ -22,6 +22,9 @@ interface DbItem {
   time: string | null;
   notified: boolean | null;
   category_id: string | null;
+  recurrence_type: DbRecurrenceType | null;
+  recurrence_end_date: string | null;
+  parent_item_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +33,9 @@ const dbItemToItem = (dbItem: DbItem): Item => {
   const base = {
     id: dbItem.id,
     createdAt: new Date(dbItem.created_at),
+    recurrenceType: (dbItem.recurrence_type as RecurrenceType) ?? 'none',
+    recurrenceEndDate: dbItem.recurrence_end_date ? new Date(dbItem.recurrence_end_date) : undefined,
+    parentItemId: dbItem.parent_item_id ?? undefined,
   };
 
   if (dbItem.type === 'task') {
@@ -40,7 +46,7 @@ const dbItemToItem = (dbItem: DbItem): Item => {
       description: dbItem.description ?? undefined,
       deadline: dbItem.deadline ? new Date(dbItem.deadline) : new Date(),
       priority: dbItem.priority ?? 'medium',
-      importance: dbItem.importance ?? 'low',
+      importance: 'low',
       completed: dbItem.completed ?? false,
       duration: dbItem.duration ?? undefined,
       categoryId: dbItem.category_id ?? undefined,
@@ -108,6 +114,9 @@ export const useItems = (userId: string | undefined) => {
       user_id: userId,
       type: item.type,
       title: item.title,
+      recurrence_type: item.recurrenceType ?? 'none',
+      recurrence_end_date: item.recurrenceEndDate?.toISOString() ?? null,
+      parent_item_id: item.parentItemId ?? null,
     };
 
     if (item.type === 'task') {
@@ -115,7 +124,6 @@ export const useItems = (userId: string | undefined) => {
       dbData.description = task.description ?? null;
       dbData.deadline = task.deadline?.toISOString() ?? null;
       dbData.priority = task.priority ?? 'medium';
-      dbData.importance = task.importance ?? 'low';
       dbData.completed = task.completed ?? false;
       dbData.duration = task.duration ?? null;
       dbData.category_id = task.categoryId ?? null;
@@ -152,6 +160,8 @@ export const useItems = (userId: string | undefined) => {
 
     const dbData: Record<string, unknown> = {
       title: item.title,
+      recurrence_type: item.recurrenceType ?? 'none',
+      recurrence_end_date: item.recurrenceEndDate?.toISOString() ?? null,
     };
 
     if (item.type === 'task') {
@@ -159,7 +169,6 @@ export const useItems = (userId: string | undefined) => {
       dbData.description = task.description ?? null;
       dbData.deadline = task.deadline?.toISOString() ?? null;
       dbData.priority = task.priority;
-      dbData.importance = task.importance;
       dbData.completed = task.completed;
       dbData.duration = task.duration ?? null;
       dbData.category_id = task.categoryId ?? null;
