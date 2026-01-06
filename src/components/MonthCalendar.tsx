@@ -22,10 +22,12 @@ interface MonthCalendarProps {
   items: Item[];
   onDaySelect: (date: Date) => void;
   selectedDate: Date;
+  onMoveItemToDate?: (itemId: string, newDate: Date) => void;
 }
 
-export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalendarProps) => {
+export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDate }: MonthCalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -48,6 +50,22 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalenda
           : (item as Reminder).time;
       return isSameDay(new Date(itemDate), date);
     });
+  };
+
+  const handleDragStart = (e: React.DragEvent, item: Item) => {
+    e.stopPropagation();
+    e.dataTransfer.setData('itemId', item.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDate: Date) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const itemId = e.dataTransfer.getData('itemId');
+    if (itemId && onMoveItemToDate) {
+      onMoveItemToDate(itemId, targetDate);
+    }
+    setDragOverDate(null);
   };
 
   const dayNames = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
@@ -113,15 +131,24 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalenda
             const events = dayItems.filter(i => i.type === 'event');
             const reminders = dayItems.filter(i => i.type === 'reminder');
 
+            const isDragOver = dragOverDate && isSameDay(dragOverDate, dayDate);
+
             return (
-              <button
+              <div
                 key={dayDate.toISOString()}
                 onClick={() => onDaySelect(dayDate)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragOverDate(dayDate);
+                }}
+                onDragLeave={() => setDragOverDate(null)}
+                onDrop={(e) => handleDrop(e, dayDate)}
                 className={cn(
-                  "relative min-h-[80px] p-2 rounded-xl text-left transition-all duration-200 hover:bg-accent/50",
+                  "relative min-h-[80px] p-2 rounded-xl text-left transition-all duration-200 hover:bg-accent/50 cursor-pointer",
                   isCurrentMonth ? "bg-card/50" : "bg-transparent opacity-40",
                   isSelected && "ring-2 ring-primary bg-primary/10",
-                  isTodayDate && !isSelected && "bg-primary/20"
+                  isTodayDate && !isSelected && "bg-primary/20",
+                  isDragOver && "ring-2 ring-primary/50 bg-primary/5 scale-[1.02]"
                 )}
                 style={{ animationDelay: `${index * 0.01}s` }}
               >
@@ -140,7 +167,9 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalenda
                   {events.slice(0, 2).map((event) => (
                     <div 
                       key={event.id}
-                      className="flex items-center gap-1 text-[10px] text-event truncate"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, event)}
+                      className="flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5"
                     >
                       <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{event.title}</span>
@@ -151,8 +180,10 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalenda
                   {tasks.slice(0, 2).map((task) => (
                     <div 
                       key={task.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, task)}
                       className={cn(
-                        "flex items-center gap-1 text-[10px] truncate",
+                        "flex items-center gap-1 text-[10px] truncate cursor-move hover:bg-accent/30 rounded px-0.5",
                         (task as Task).completed ? "text-muted-foreground line-through" : "text-task"
                       )}
                     >
@@ -165,7 +196,9 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalenda
                   {reminders.slice(0, 1).map((reminder) => (
                     <div 
                       key={reminder.id}
-                      className="flex items-center gap-1 text-[10px] text-reminder truncate"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, reminder)}
+                      className="flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5"
                     >
                       <Bell className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{reminder.title}</span>
@@ -179,7 +212,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate }: MonthCalenda
                     </div>
                   )}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>

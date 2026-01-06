@@ -25,6 +25,7 @@ interface DbItem {
   recurrence_type: DbRecurrenceType | null;
   recurrence_end_date: string | null;
   parent_item_id: string | null;
+  sort_order: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,6 +37,7 @@ const dbItemToItem = (dbItem: DbItem): Item => {
     recurrenceType: (dbItem.recurrence_type as RecurrenceType) ?? 'none',
     recurrenceEndDate: dbItem.recurrence_end_date ? new Date(dbItem.recurrence_end_date) : undefined,
     parentItemId: dbItem.parent_item_id ?? undefined,
+    sortOrder: dbItem.sort_order ?? 0,
   };
 
   if (dbItem.type === 'task') {
@@ -91,6 +93,7 @@ export const useItems = (userId: string | undefined) => {
       .from('items')
       .select('*')
       .eq('user_id', userId)
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -117,6 +120,7 @@ export const useItems = (userId: string | undefined) => {
       recurrence_type: item.recurrenceType ?? 'none',
       recurrence_end_date: item.recurrenceEndDate?.toISOString() ?? null,
       parent_item_id: item.parentItemId ?? null,
+      sort_order: item.sortOrder ?? 0,
     };
 
     if (item.type === 'task') {
@@ -162,6 +166,7 @@ export const useItems = (userId: string | undefined) => {
       title: item.title,
       recurrence_type: item.recurrenceType ?? 'none',
       recurrence_end_date: item.recurrenceEndDate?.toISOString() ?? null,
+      sort_order: item.sortOrder ?? 0,
     };
 
     if (item.type === 'task') {
@@ -226,6 +231,35 @@ export const useItems = (userId: string | undefined) => {
     return updateItem(updatedTask);
   };
 
+  const reorderItems = async (reorderedItems: Item[]): Promise<boolean> => {
+    if (!userId) return false;
+
+    // Update local state immediately for responsiveness
+    setItems(prev => {
+      const otherItems = prev.filter(
+        item => !reorderedItems.find(r => r.id === item.id)
+      );
+      return [...reorderedItems, ...otherItems];
+    });
+
+    // Persist to database
+    try {
+      const updates = reorderedItems.map((item, index) => 
+        supabase
+          .from('items')
+          .update({ sort_order: index } as any)
+          .eq('id', item.id)
+          .eq('user_id', userId)
+      );
+
+      await Promise.all(updates);
+      return true;
+    } catch (error) {
+      console.error('Error reordering items:', error);
+      return false;
+    }
+  };
+
   return {
     items,
     loading,
@@ -234,6 +268,7 @@ export const useItems = (userId: string | undefined) => {
     updateItem,
     deleteItem,
     toggleTaskComplete,
+    reorderItems,
     refetch: fetchItems,
     setItems,
   };

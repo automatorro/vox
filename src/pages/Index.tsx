@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { isSameDay } from "date-fns";
+import { isSameDay, format } from "date-fns";
+import { ro } from "date-fns/locale";
 import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
@@ -17,7 +18,7 @@ import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { AIPrioritization } from "@/components/AIPrioritization";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
-import { Item, Task, Event, VoiceParseResult } from "@/types";
+import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
@@ -49,7 +50,7 @@ const Index = () => {
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
-  const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, setItems } = useItems(user?.id);
+  const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
   const { categories, createCategory } = useCategories(user?.id);
 
   // Google Calendar integration
@@ -247,6 +248,38 @@ const Index = () => {
     });
   };
 
+  const handleMoveItemToDate = async (itemId: string, newDate: Date) => {
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+
+    let updatedItem: Item;
+
+    if (item.type === 'task') {
+      updatedItem = { ...item, deadline: newDate } as Task;
+    } else if (item.type === 'event') {
+      const event = item as Event;
+      // Preserve the time, just change the date
+      const oldDate = new Date(event.startTime);
+      const newDateTime = new Date(newDate);
+      newDateTime.setHours(oldDate.getHours(), oldDate.getMinutes(), 0, 0);
+      updatedItem = { ...event, startTime: newDateTime };
+    } else {
+      const reminder = item as Reminder;
+      const oldTime = new Date(reminder.time);
+      const newDateTime = new Date(newDate);
+      newDateTime.setHours(oldTime.getHours(), oldTime.getMinutes(), 0, 0);
+      updatedItem = { ...reminder, time: newDateTime };
+    }
+
+    const success = await updateItem(updatedItem);
+    if (success) {
+      toast({
+        title: "Item mutat! 📅",
+        description: `"${item.title}" a fost mutat în ${format(newDate, 'd MMMM', { locale: ro })}`,
+      });
+    }
+  };
+
   if (itemsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -369,7 +402,6 @@ const Index = () => {
               />
             </section>
 
-            {/* Day View */}
             <section>
               <DayView
                 date={selectedDate}
@@ -379,15 +411,7 @@ const Index = () => {
                 onCompleteTask={handleCompleteTask}
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
-                onReorderItems={(reorderedItems) => {
-                  // Update the items order
-                  setItems(prev => {
-                    const otherItems = prev.filter(
-                      item => !reorderedItems.find(r => r.id === item.id)
-                    );
-                    return [...reorderedItems, ...otherItems];
-                  });
-                }}
+                onReorderItems={reorderItems}
               />
             </section>
           </>
@@ -396,6 +420,7 @@ const Index = () => {
             items={items}
             selectedDate={selectedDate}
             onDaySelect={handleDaySelectFromCalendar}
+            onMoveItemToDate={handleMoveItemToDate}
           />
         ) : (
           <EisenhowerMatrix
