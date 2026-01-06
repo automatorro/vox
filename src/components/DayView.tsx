@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { Item, Task } from "@/types";
 import { Category } from "@/hooks/useCategories";
 import { ItemCard } from "./ItemCard";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DayViewProps {
   date: Date;
@@ -13,32 +15,75 @@ interface DayViewProps {
   onCompleteTask?: (id: string) => void;
   onEditItem?: (item: Item) => void;
   onDeleteItem?: (id: string) => void;
+  onReorderItems?: (reorderedItems: Item[]) => void;
 }
 
-export const DayView = ({ date, items, categories, overloaded, onCompleteTask, onEditItem, onDeleteItem }: DayViewProps) => {
+export const DayView = ({ 
+  date, 
+  items, 
+  categories, 
+  overloaded, 
+  onCompleteTask, 
+  onEditItem, 
+  onDeleteItem,
+  onReorderItems 
+}: DayViewProps) => {
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  
   const isToday = format(new Date(), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
   
-  // Sort items by time/priority
-  const sortedItems = [...items].sort((a, b) => {
-    // Events first, by time
-    if (a.type === 'event' && b.type !== 'event') return -1;
-    if (a.type !== 'event' && b.type === 'event') return 1;
-    
-    // Then reminders
-    if (a.type === 'reminder' && b.type === 'task') return -1;
-    if (a.type === 'task' && b.type === 'reminder') return 1;
-    
-    // Tasks by priority
-    if (a.type === 'task' && b.type === 'task') {
-      const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-      return priorityOrder[(a as Task).priority] - priorityOrder[(b as Task).priority];
-    }
-    
-    return 0;
-  });
+  // Use items directly without auto-sorting to allow manual reorder
+  const sortedItems = [...items];
 
   const completedCount = items.filter(i => i.type === 'task' && (i as Task).completed).length;
   const totalTasks = items.filter(i => i.type === 'task').length;
+
+  const handleDragStart = (e: React.DragEvent, item: Item) => {
+    setDraggedId(item.id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.id);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, item: Item) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (item.id !== draggedId) {
+      setDragOverId(item.id);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetItem: Item) => {
+    e.preventDefault();
+    
+    if (!draggedId || draggedId === targetItem.id) {
+      setDraggedId(null);
+      setDragOverId(null);
+      return;
+    }
+
+    const draggedIndex = sortedItems.findIndex(i => i.id === draggedId);
+    const targetIndex = sortedItems.findIndex(i => i.id === targetItem.id);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newItems = [...sortedItems];
+    const [draggedItem] = newItems.splice(draggedIndex, 1);
+    newItems.splice(targetIndex, 0, draggedItem);
+
+    onReorderItems?.(newItems);
+    setDraggedId(null);
+    setDragOverId(null);
+  };
 
   return (
     <div className="animate-fade-in-up">
@@ -87,16 +132,40 @@ export const DayView = ({ date, items, categories, overloaded, onCompleteTask, o
           sortedItems.map((item, index) => (
             <div 
               key={item.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, item)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => handleDragOver(e, item)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, item)}
               style={{ animationDelay: `${index * 0.05}s` }}
-              className="animate-fade-in-up"
+              className={cn(
+                "animate-fade-in-up relative group transition-all duration-200",
+                draggedId === item.id && "opacity-50 scale-95",
+                dragOverId === item.id && "translate-y-2"
+              )}
             >
-              <ItemCard 
-                item={item}
-                categories={categories}
-                onComplete={onCompleteTask}
-                onEdit={onEditItem}
-                onDelete={onDeleteItem}
-              />
+              {/* Drop indicator */}
+              {dragOverId === item.id && (
+                <div className="absolute -top-1.5 left-0 right-0 h-0.5 bg-primary rounded-full" />
+              )}
+              
+              <div className="flex items-center gap-2">
+                {/* Drag handle */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+                  <GripVertical className="h-5 w-5" />
+                </div>
+                
+                <div className="flex-1">
+                  <ItemCard 
+                    item={item}
+                    categories={categories}
+                    onComplete={onCompleteTask}
+                    onEdit={onEditItem}
+                    onDelete={onDeleteItem}
+                  />
+                </div>
+              </div>
             </div>
           ))
         )}
