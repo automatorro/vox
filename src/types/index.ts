@@ -5,6 +5,7 @@ interface RecurrenceFields {
   recurrenceType?: RecurrenceType;
   recurrenceEndDate?: Date;
   parentItemId?: string;
+  sortOrder?: number;
 }
 
 export interface Task extends RecurrenceFields {

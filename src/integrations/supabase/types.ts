@@ -61,6 +61,7 @@ export type Database = {
           priority: Database["public"]["Enums"]["priority_level"] | null
           recurrence_end_date: string | null
           recurrence_type: string | null
+          sort_order: number | null
           start_time: string | null
           synced: boolean | null
           time: string | null
@@ -83,6 +84,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["priority_level"] | null
           recurrence_end_date?: string | null
           recurrence_type?: string | null
+          sort_order?: number | null
           start_time?: string | null
           synced?: boolean | null
           time?: string | null
@@ -105,6 +107,7 @@ export type Database = {
           priority?: Database["public"]["Enums"]["priority_level"] | null
           recurrence_end_date?: string | null
           recurrence_type?: string | null
+          sort_order?: number | null
           start_time?: string | null
           synced?: boolean | null
           time?: string | null

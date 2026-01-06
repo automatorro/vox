@@ -37,11 +37,24 @@ const Quadrant = ({
         }
     };
 
+    const [isDragOver, setIsDragOver] = useState(false);
+
     return (
         <Card
-            className={cn("h-full flex flex-col transition-colors", getVariantStyles())}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => onDrop(e, variant)}
+            className={cn(
+                "h-full flex flex-col transition-all duration-200",
+                getVariantStyles(),
+                isDragOver && "ring-2 ring-primary scale-[1.02]"
+            )}
+            onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={(e) => {
+                setIsDragOver(false);
+                onDrop(e, variant);
+            }}
         >
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg flex justify-between items-center">
@@ -108,7 +121,8 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
         return { q1, q2, q3, q4 };
     }, [tasks]);
 
-    const handleDrop = (e: React.DragEvent, targetVariant: 'do' | 'schedule' | 'delegate' | 'eliminate') => {
+    const handleDrop = async (e: React.DragEvent, targetVariant: 'do' | 'schedule' | 'delegate' | 'eliminate') => {
+        e.preventDefault();
         const taskId = e.dataTransfer.getData('taskId');
         const task = tasks.find(t => t.id === taskId);
         if (!task) return;
@@ -126,11 +140,11 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                 updates = { priority: 'high', importance: 'low' };
                 break;
             case 'eliminate':
-                updates = { priority: 'medium', importance: 'low' };
+                updates = { priority: 'low', importance: 'low' };
                 break;
         }
 
-        onUpdateTask({ ...task, ...updates });
+        await onUpdateTask({ ...task, ...updates });
     };
 
     const handleAutoMatrix = async () => {
