@@ -379,6 +379,15 @@ const Index = () => {
                 onCompleteTask={handleCompleteTask}
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
+                onReorderItems={(reorderedItems) => {
+                  // Update the items order
+                  setItems(prev => {
+                    const otherItems = prev.filter(
+                      item => !reorderedItems.find(r => r.id === item.id)
+                    );
+                    return [...reorderedItems, ...otherItems];
+                  });
+                }}
               />
             </section>
           </>
