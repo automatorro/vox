@@ -56,6 +56,7 @@ export type Database = {
           duration: number | null
           google_id: string | null
           id: string
+          importance: string | null
           notified: boolean | null
           parent_item_id: string | null
           priority: Database["public"]["Enums"]["priority_level"] | null
@@ -79,6 +80,7 @@ export type Database = {
           duration?: number | null
           google_id?: string | null
           id?: string
+          importance?: string | null
           notified?: boolean | null
           parent_item_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"] | null
@@ -102,6 +104,7 @@ export type Database = {
           duration?: number | null
           google_id?: string | null
           id?: string
+          importance?: string | null
           notified?: boolean | null
           parent_item_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"] | null
