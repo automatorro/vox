@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { 
   format, 
   startOfMonth, 
@@ -17,6 +17,7 @@ import { ChevronLeft, ChevronRight, Circle, Calendar, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { Item, Task, Event, Reminder } from "@/types";
 import { cn } from "@/lib/utils";
+import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 
 interface MonthCalendarProps {
   items: Item[];
@@ -52,6 +53,28 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
     });
   };
 
+  const handleMoveItem = useCallback((itemId: string, targetDate: Date) => {
+    if (onMoveItemToDate) {
+      onMoveItemToDate(itemId, targetDate);
+    }
+    setDragOverDate(null);
+  }, [onMoveItemToDate]);
+
+  // Touch drag and drop
+  const touchDrag = useTouchDragDrop({
+    dropTargetSelector: '[data-calendar-day]',
+    onDragEnd: (id, dropTarget) => {
+      if (dropTarget) {
+        const dateStr = dropTarget.getAttribute('data-date');
+        if (dateStr) {
+          handleMoveItem(id, new Date(dateStr));
+        }
+      }
+      setDragOverDate(null);
+    },
+  });
+
+  // Mouse drag handlers
   const handleDragStart = (e: React.DragEvent, item: Item) => {
     e.stopPropagation();
     e.dataTransfer.setData('itemId', item.id);
@@ -62,10 +85,9 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
     e.preventDefault();
     e.stopPropagation();
     const itemId = e.dataTransfer.getData('itemId');
-    if (itemId && onMoveItemToDate) {
-      onMoveItemToDate(itemId, targetDate);
+    if (itemId) {
+      handleMoveItem(itemId, targetDate);
     }
-    setDragOverDate(null);
   };
 
   const dayNames = ['Lun', 'Mar', 'Mie', 'Joi', 'Vin', 'Sâm', 'Dum'];
@@ -136,6 +158,9 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
             return (
               <div
                 key={dayDate.toISOString()}
+                data-calendar-day
+                data-drop-target
+                data-date={dayDate.toISOString()}
                 onClick={() => onDaySelect(dayDate)}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -148,7 +173,8 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                   isCurrentMonth ? "bg-card/50" : "bg-transparent opacity-40",
                   isSelected && "ring-2 ring-primary bg-primary/10",
                   isTodayDate && !isSelected && "bg-primary/20",
-                  isDragOver && "ring-2 ring-primary/50 bg-primary/5 scale-[1.02]"
+                  isDragOver && "ring-2 ring-primary/50 bg-primary/5 scale-[1.02]",
+                  "[&.touch-drag-over]:ring-2 [&.touch-drag-over]:ring-primary [&.touch-drag-over]:bg-primary/10 [&.touch-drag-over]:scale-[1.02]"
                 )}
                 style={{ animationDelay: `${index * 0.01}s` }}
               >
@@ -169,7 +195,11 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       key={event.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, event)}
-                      className="flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5"
+                      onTouchStart={(e) => touchDrag.handleTouchStart(e, event.id)}
+                      onTouchMove={touchDrag.handleTouchMove}
+                      onTouchEnd={touchDrag.handleTouchEnd}
+                      onTouchCancel={touchDrag.handleTouchCancel}
+                      className="flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none"
                     >
                       <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{event.title}</span>
@@ -182,8 +212,12 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       key={task.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, task)}
+                      onTouchStart={(e) => touchDrag.handleTouchStart(e, task.id)}
+                      onTouchMove={touchDrag.handleTouchMove}
+                      onTouchEnd={touchDrag.handleTouchEnd}
+                      onTouchCancel={touchDrag.handleTouchCancel}
                       className={cn(
-                        "flex items-center gap-1 text-[10px] truncate cursor-move hover:bg-accent/30 rounded px-0.5",
+                        "flex items-center gap-1 text-[10px] truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
                         (task as Task).completed ? "text-muted-foreground line-through" : "text-task"
                       )}
                     >
@@ -198,7 +232,11 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       key={reminder.id}
                       draggable
                       onDragStart={(e) => handleDragStart(e, reminder)}
-                      className="flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5"
+                      onTouchStart={(e) => touchDrag.handleTouchStart(e, reminder.id)}
+                      onTouchMove={touchDrag.handleTouchMove}
+                      onTouchEnd={touchDrag.handleTouchEnd}
+                      onTouchCancel={touchDrag.handleTouchCancel}
+                      className="flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none"
                     >
                       <Bell className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{reminder.title}</span>

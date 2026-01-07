@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { Task } from '@/types';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,10 +9,21 @@ import { format } from 'date-fns';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 
 interface EisenhowerMatrixProps {
     tasks: Task[];
     onUpdateTask: (task: Task) => void;
+}
+
+interface QuadrantProps {
+    title: string;
+    description: string;
+    tasks: Task[];
+    variant: 'do' | 'schedule' | 'delegate' | 'eliminate';
+    onDrop: (e: React.DragEvent, variant: 'do' | 'schedule' | 'delegate' | 'eliminate') => void;
+    onTouchDrop: (taskId: string, variant: 'do' | 'schedule' | 'delegate' | 'eliminate') => void;
+    touchDrag: ReturnType<typeof useTouchDragDrop>;
 }
 
 const Quadrant = ({
@@ -21,13 +32,9 @@ const Quadrant = ({
     tasks,
     variant,
     onDrop,
-}: {
-    title: string;
-    description: string;
-    tasks: Task[];
-    variant: 'do' | 'schedule' | 'delegate' | 'eliminate';
-    onDrop: (e: React.DragEvent, variant: 'do' | 'schedule' | 'delegate' | 'eliminate') => void;
-}) => {
+    onTouchDrop,
+    touchDrag,
+}: QuadrantProps) => {
     const getVariantStyles = () => {
         switch (variant) {
             case 'do': return 'border-red-500/50 bg-red-500/5';
@@ -41,10 +48,13 @@ const Quadrant = ({
 
     return (
         <Card
+            data-drop-target
+            data-quadrant={variant}
             className={cn(
                 "h-full flex flex-col transition-all duration-200",
                 getVariantStyles(),
-                isDragOver && "ring-2 ring-primary scale-[1.02]"
+                isDragOver && "ring-2 ring-primary scale-[1.02]",
+                "[&.touch-drag-over]:ring-2 [&.touch-drag-over]:ring-primary [&.touch-drag-over]:scale-[1.02]"
             )}
             onDragOver={(e) => {
                 e.preventDefault();
@@ -73,7 +83,11 @@ const Quadrant = ({
                                 key={task.id}
                                 draggable
                                 onDragStart={(e) => e.dataTransfer.setData('taskId', task.id)}
-                                className="p-3 rounded-lg border bg-background/80 hover:bg-background shadow-sm cursor-move transition-all active:scale-95 group relative"
+                                onTouchStart={(e) => touchDrag.handleTouchStart(e, task.id)}
+                                onTouchMove={touchDrag.handleTouchMove}
+                                onTouchEnd={touchDrag.handleTouchEnd}
+                                onTouchCancel={touchDrag.handleTouchCancel}
+                                className="p-3 rounded-lg border bg-background/80 hover:bg-background shadow-sm cursor-move transition-all active:scale-95 group relative touch-none"
                             >
                                 <div className="font-medium text-sm line-clamp-2 pr-6">{task.title}</div>
                                 <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
@@ -121,31 +135,49 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
         return { q1, q2, q3, q4 };
     }, [tasks]);
 
+    const getUpdatesForVariant = (variant: 'do' | 'schedule' | 'delegate' | 'eliminate'): Partial<Task> => {
+        switch (variant) {
+            case 'do':
+                return { priority: 'critical', importance: 'high' };
+            case 'schedule':
+                return { priority: 'medium', importance: 'high' };
+            case 'delegate':
+                return { priority: 'high', importance: 'low' };
+            case 'eliminate':
+                return { priority: 'low', importance: 'low' };
+        }
+    };
+
     const handleDrop = async (e: React.DragEvent, targetVariant: 'do' | 'schedule' | 'delegate' | 'eliminate') => {
         e.preventDefault();
         const taskId = e.dataTransfer.getData('taskId');
         const task = tasks.find(t => t.id === taskId);
         if (!task) return;
 
-        let updates: Partial<Task> = {};
-
-        switch (targetVariant) {
-            case 'do':
-                updates = { priority: 'critical', importance: 'high' };
-                break;
-            case 'schedule':
-                updates = { priority: 'medium', importance: 'high' };
-                break;
-            case 'delegate':
-                updates = { priority: 'high', importance: 'low' };
-                break;
-            case 'eliminate':
-                updates = { priority: 'low', importance: 'low' };
-                break;
-        }
-
+        const updates = getUpdatesForVariant(targetVariant);
         await onUpdateTask({ ...task, ...updates });
     };
+
+    const handleTouchDrop = useCallback(async (taskId: string, targetVariant: 'do' | 'schedule' | 'delegate' | 'eliminate') => {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        const updates = getUpdatesForVariant(targetVariant);
+        await onUpdateTask({ ...task, ...updates });
+    }, [tasks, onUpdateTask]);
+
+    // Touch drag and drop
+    const touchDrag = useTouchDragDrop({
+        dropTargetSelector: '[data-quadrant]',
+        onDragEnd: (id, dropTarget) => {
+            if (dropTarget) {
+                const variant = dropTarget.getAttribute('data-quadrant') as 'do' | 'schedule' | 'delegate' | 'eliminate';
+                if (variant) {
+                    handleTouchDrop(id, variant);
+                }
+            }
+        },
+    });
 
     const handleAutoMatrix = async () => {
         setIsAnalyzing(true);
@@ -221,6 +253,8 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     tasks={quadrants.q1}
                     variant="do"
                     onDrop={handleDrop}
+                    onTouchDrop={handleTouchDrop}
+                    touchDrag={touchDrag}
                 />
                 <Quadrant
                     title="Schedule"
@@ -228,6 +262,8 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     tasks={quadrants.q2}
                     variant="schedule"
                     onDrop={handleDrop}
+                    onTouchDrop={handleTouchDrop}
+                    touchDrag={touchDrag}
                 />
                 <Quadrant
                     title="Delegate"
@@ -235,6 +271,8 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     tasks={quadrants.q3}
                     variant="delegate"
                     onDrop={handleDrop}
+                    onTouchDrop={handleTouchDrop}
+                    touchDrag={touchDrag}
                 />
                 <Quadrant
                     title="Eliminate"
@@ -242,6 +280,8 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     tasks={quadrants.q4}
                     variant="eliminate"
                     onDrop={handleDrop}
+                    onTouchDrop={handleTouchDrop}
+                    touchDrag={touchDrag}
                 />
             </div>
         </div>
