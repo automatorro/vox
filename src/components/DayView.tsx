@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { Item, Task } from "@/types";
@@ -6,6 +6,7 @@ import { Category } from "@/hooks/useCategories";
 import { ItemCard } from "./ItemCard";
 import { AlertCircle, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 
 interface DayViewProps {
   date: Date;
@@ -39,6 +40,36 @@ export const DayView = ({
   const completedCount = items.filter(i => i.type === 'task' && (i as Task).completed).length;
   const totalTasks = items.filter(i => i.type === 'task').length;
 
+  const handleReorder = useCallback((draggedItemId: string, targetItemId: string) => {
+    const draggedIndex = sortedItems.findIndex(i => i.id === draggedItemId);
+    const targetIndex = sortedItems.findIndex(i => i.id === targetItemId);
+
+    if (draggedIndex === -1 || targetIndex === -1) return;
+
+    const newItems = [...sortedItems];
+    const [draggedItem] = newItems.splice(draggedIndex, 1);
+    newItems.splice(targetIndex, 0, draggedItem);
+
+    onReorderItems?.(newItems);
+  }, [sortedItems, onReorderItems]);
+
+  // Touch drag and drop
+  const touchDrag = useTouchDragDrop({
+    dropTargetSelector: '[data-day-item]',
+    onDragStart: (id) => setDraggedId(id),
+    onDragEnd: (id, dropTarget) => {
+      if (dropTarget) {
+        const targetId = dropTarget.getAttribute('data-item-id');
+        if (targetId && targetId !== id) {
+          handleReorder(id, targetId);
+        }
+      }
+      setDraggedId(null);
+      setDragOverId(null);
+    },
+  });
+
+  // Mouse drag handlers
   const handleDragStart = (e: React.DragEvent, item: Item) => {
     setDraggedId(item.id);
     e.dataTransfer.effectAllowed = 'move';
@@ -71,16 +102,7 @@ export const DayView = ({
       return;
     }
 
-    const draggedIndex = sortedItems.findIndex(i => i.id === draggedId);
-    const targetIndex = sortedItems.findIndex(i => i.id === targetItem.id);
-
-    if (draggedIndex === -1 || targetIndex === -1) return;
-
-    const newItems = [...sortedItems];
-    const [draggedItem] = newItems.splice(draggedIndex, 1);
-    newItems.splice(targetIndex, 0, draggedItem);
-
-    onReorderItems?.(newItems);
+    handleReorder(draggedId, targetItem.id);
     setDraggedId(null);
     setDragOverId(null);
   };
@@ -132,17 +154,24 @@ export const DayView = ({
           sortedItems.map((item, index) => (
             <div 
               key={item.id}
+              data-day-item
+              data-item-id={item.id}
               draggable
               onDragStart={(e) => handleDragStart(e, item)}
               onDragEnd={handleDragEnd}
               onDragOver={(e) => handleDragOver(e, item)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, item)}
+              onTouchStart={(e) => touchDrag.handleTouchStart(e, item.id)}
+              onTouchMove={touchDrag.handleTouchMove}
+              onTouchEnd={touchDrag.handleTouchEnd}
+              onTouchCancel={touchDrag.handleTouchCancel}
               style={{ animationDelay: `${index * 0.05}s` }}
               className={cn(
-                "animate-fade-in-up relative group transition-all duration-200",
+                "animate-fade-in-up relative group transition-all duration-200 touch-none",
                 draggedId === item.id && "opacity-50 scale-95",
-                dragOverId === item.id && "translate-y-2"
+                dragOverId === item.id && "translate-y-2",
+                "[&.touch-drag-over]:ring-2 [&.touch-drag-over]:ring-primary [&.touch-drag-over]:scale-[1.02]"
               )}
             >
               {/* Drop indicator */}
@@ -152,7 +181,7 @@ export const DayView = ({
               
               <div className="flex items-center gap-2">
                 {/* Drag handle */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
+                <div className="opacity-0 group-hover:opacity-100 md:transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch:opacity-100">
                   <GripVertical className="h-5 w-5" />
                 </div>
                 
