@@ -95,11 +95,15 @@ export const useTouchDragDrop = (options: UseTouchDragDropOptions = {}) => {
 
   const handleTouchStart = useCallback((e: React.TouchEvent, id: string) => {
     const touch = e.touches[0];
+    const element = e.currentTarget as HTMLElement;
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     
     // Long press to initiate drag
     longPressTimerRef.current = setTimeout(() => {
-      const element = e.currentTarget as HTMLElement;
+      // Check if element is still in DOM
+      if (!element || !document.body.contains(element)) {
+        return;
+      }
       
       // Vibrate for feedback on mobile
       if (navigator.vibrate) {
