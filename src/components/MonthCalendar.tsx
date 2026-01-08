@@ -29,6 +29,7 @@ interface MonthCalendarProps {
 export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDate }: MonthCalendarProps) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
+  const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -56,6 +57,9 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
   const handleMoveItem = useCallback((itemId: string, targetDate: Date) => {
     if (onMoveItemToDate) {
       onMoveItemToDate(itemId, targetDate);
+      // Trigger success animation
+      setRecentlyDroppedId(itemId);
+      setTimeout(() => setRecentlyDroppedId(null), 500);
     }
     setDragOverDate(null);
   }, [onMoveItemToDate]);
@@ -199,7 +203,10 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       onTouchMove={touchDrag.handleTouchMove}
                       onTouchEnd={touchDrag.handleTouchEnd}
                       onTouchCancel={touchDrag.handleTouchCancel}
-                      className="flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none"
+                      className={cn(
+                        "flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
+                        recentlyDroppedId === event.id && "animate-drop-success"
+                      )}
                     >
                       <Calendar className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{event.title}</span>
@@ -218,7 +225,8 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       onTouchCancel={touchDrag.handleTouchCancel}
                       className={cn(
                         "flex items-center gap-1 text-[10px] truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
-                        (task as Task).completed ? "text-muted-foreground line-through" : "text-task"
+                        (task as Task).completed ? "text-muted-foreground line-through" : "text-task",
+                        recentlyDroppedId === task.id && "animate-drop-success"
                       )}
                     >
                       <Circle className="h-2.5 w-2.5 flex-shrink-0" />
@@ -236,7 +244,10 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       onTouchMove={touchDrag.handleTouchMove}
                       onTouchEnd={touchDrag.handleTouchEnd}
                       onTouchCancel={touchDrag.handleTouchCancel}
-                      className="flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none"
+                      className={cn(
+                        "flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
+                        recentlyDroppedId === reminder.id && "animate-drop-success"
+                      )}
                     >
                       <Bell className="h-2.5 w-2.5 flex-shrink-0" />
                       <span className="truncate">{reminder.title}</span>

@@ -24,6 +24,7 @@ interface QuadrantProps {
     onDrop: (e: React.DragEvent, variant: 'do' | 'schedule' | 'delegate' | 'eliminate') => void;
     onTouchDrop: (taskId: string, variant: 'do' | 'schedule' | 'delegate' | 'eliminate') => void;
     touchDrag: ReturnType<typeof useTouchDragDrop>;
+    recentlyDroppedId: string | null;
 }
 
 const Quadrant = ({
@@ -34,6 +35,7 @@ const Quadrant = ({
     onDrop,
     onTouchDrop,
     touchDrag,
+    recentlyDroppedId,
 }: QuadrantProps) => {
     const getVariantStyles = () => {
         switch (variant) {
@@ -78,7 +80,7 @@ const Quadrant = ({
             <CardContent className="flex-1 min-h-0 p-2">
                 <ScrollArea className="h-full pr-4">
                     <div className="space-y-2">
-                        {tasks.map(task => (
+                    {tasks.map(task => (
                             <div
                                 key={task.id}
                                 draggable
@@ -87,7 +89,10 @@ const Quadrant = ({
                                 onTouchMove={touchDrag.handleTouchMove}
                                 onTouchEnd={touchDrag.handleTouchEnd}
                                 onTouchCancel={touchDrag.handleTouchCancel}
-                                className="p-3 rounded-lg border bg-background/80 hover:bg-background shadow-sm cursor-move transition-all active:scale-95 group relative touch-none"
+                                className={cn(
+                                    "p-3 rounded-lg border bg-background/80 hover:bg-background shadow-sm cursor-move transition-all active:scale-95 group relative touch-none",
+                                    recentlyDroppedId === task.id && "animate-drop-success"
+                                )}
                             >
                                 <div className="font-medium text-sm line-clamp-2 pr-6">{task.title}</div>
                                 <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
@@ -114,6 +119,7 @@ const Quadrant = ({
 
 export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps) => {
     const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null);
     const { toast } = useToast();
 
     const quadrants = useMemo(() => {
@@ -156,6 +162,10 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
 
         const updates = getUpdatesForVariant(targetVariant);
         await onUpdateTask({ ...task, ...updates });
+        
+        // Trigger success animation
+        setRecentlyDroppedId(taskId);
+        setTimeout(() => setRecentlyDroppedId(null), 500);
     };
 
     const handleTouchDrop = useCallback(async (taskId: string, targetVariant: 'do' | 'schedule' | 'delegate' | 'eliminate') => {
@@ -164,6 +174,10 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
 
         const updates = getUpdatesForVariant(targetVariant);
         await onUpdateTask({ ...task, ...updates });
+        
+        // Trigger success animation
+        setRecentlyDroppedId(taskId);
+        setTimeout(() => setRecentlyDroppedId(null), 500);
     }, [tasks, onUpdateTask]);
 
     // Touch drag and drop
@@ -255,6 +269,7 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     onDrop={handleDrop}
                     onTouchDrop={handleTouchDrop}
                     touchDrag={touchDrag}
+                    recentlyDroppedId={recentlyDroppedId}
                 />
                 <Quadrant
                     title="Schedule"
@@ -264,6 +279,7 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     onDrop={handleDrop}
                     onTouchDrop={handleTouchDrop}
                     touchDrag={touchDrag}
+                    recentlyDroppedId={recentlyDroppedId}
                 />
                 <Quadrant
                     title="Delegate"
@@ -273,6 +289,7 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     onDrop={handleDrop}
                     onTouchDrop={handleTouchDrop}
                     touchDrag={touchDrag}
+                    recentlyDroppedId={recentlyDroppedId}
                 />
                 <Quadrant
                     title="Eliminate"
@@ -282,6 +299,7 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
                     onDrop={handleDrop}
                     onTouchDrop={handleTouchDrop}
                     touchDrag={touchDrag}
+                    recentlyDroppedId={recentlyDroppedId}
                 />
             </div>
         </div>
