@@ -10,6 +10,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
+import { useConfirmationSound } from "@/hooks/useConfirmationSound";
 
 interface EisenhowerMatrixProps {
     tasks: Task[];
@@ -121,6 +122,7 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null);
     const { toast } = useToast();
+    const { playSuccessSound } = useConfirmationSound();
 
     const quadrants = useMemo(() => {
         const q1: Task[] = []; // Urgent & Important
@@ -163,7 +165,8 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
         const updates = getUpdatesForVariant(targetVariant);
         await onUpdateTask({ ...task, ...updates });
         
-        // Trigger success animation
+        // Trigger success animation and sound
+        playSuccessSound();
         setRecentlyDroppedId(taskId);
         setTimeout(() => setRecentlyDroppedId(null), 500);
     };
@@ -175,10 +178,11 @@ export const EisenhowerMatrix = ({ tasks, onUpdateTask }: EisenhowerMatrixProps)
         const updates = getUpdatesForVariant(targetVariant);
         await onUpdateTask({ ...task, ...updates });
         
-        // Trigger success animation
+        // Trigger success animation and sound
+        playSuccessSound();
         setRecentlyDroppedId(taskId);
         setTimeout(() => setRecentlyDroppedId(null), 500);
-    }, [tasks, onUpdateTask]);
+    }, [tasks, onUpdateTask, playSuccessSound]);
 
     // Touch drag and drop
     const touchDrag = useTouchDragDrop({
