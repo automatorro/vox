@@ -57,18 +57,39 @@ If you have enough information to answer the user directly (or after tool use), 
 }
 `;
 
+        // Get current time in user's timezone for context
+        const userHours = userLocalTime.getHours().toString().padStart(2, '0');
+        const userMinutes = userLocalTime.getMinutes().toString().padStart(2, '0');
+        const currentTime = `${userHours}:${userMinutes}`;
+
         // 3. First LLM Call - Planning
         const systemPrompt = `You are VOX, an intelligent productivity assistant.
 Current Date: ${today}
+Current Time: ${currentTime}
 Tomorrow's Date: ${tomorrow}
 User's Timezone Offset: ${timezoneOffset} minutes from UTC
 Language: ${language || 'RO'}
 
-CRITICAL DATE HANDLING RULES:
+CRITICAL DATE AND TIME HANDLING RULES:
 - "azi" or "today" = ${today}
 - "mâine" or "tomorrow" = ${tomorrow}
 - When user says "tomorrow" or "mâine", ALWAYS use ${tomorrow} as the date
-- For reminders, use the full ISO datetime format: YYYY-MM-DDTHH:mm:ss
+- For reminders and events, ALWAYS include the time in the response
+
+TIME PARSING RULES:
+- "la 10" or "la ora 10" = 10:00
+- "la 10:30" = 10:30
+- "dimineață" = 09:00
+- "prânz" = 12:00
+- "după-amiază" = 14:00
+- "seară" = 19:00
+- "noapte" = 21:00
+- If no time is specified for a reminder, use 09:00 as default
+
+OUTPUT FORMAT FOR DATES AND TIMES:
+- For reminders: the "time" field MUST be a full ISO datetime: "${tomorrow}T10:00:00"
+- For events: the "startTime" field MUST be a full ISO datetime: "${tomorrow}T14:00:00"
+- For tasks: the "deadline" field MUST be a full ISO date: "${tomorrow}"
 
 ${toolsDefinition}
 
@@ -76,10 +97,19 @@ OUTPUT SCHEMA (Result):
 Your final response MUST be valid JSON matching this structure:
 {
   "intent": "create" | "modify" | "delete" | "query" | "plan",
-  "item": { ...item fields... },
-  "conversationalResponse": "Natural language reply",
+  "item": {
+    "type": "task" | "event" | "reminder",
+    "title": "string",
+    "deadline": "YYYY-MM-DD" (for tasks),
+    "startTime": "YYYY-MM-DDTHH:mm:ss" (for events),
+    "time": "YYYY-MM-DDTHH:mm:ss" (for reminders),
+    "duration": number (minutes, for events),
+    "priority": "low" | "medium" | "high" | "critical" (for tasks)
+  },
+  "conversationalResponse": "Natural language reply confirming the action",
   "warnings": [],
-  "suggestions": []
+  "suggestions": [],
+  "confidence": 0.0-1.0
 }
 
 User Input: "${transcript}"

@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Item, Task, Event, Reminder } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
+import { useConfirmationSound } from "@/hooks/useConfirmationSound";
 
 interface MonthCalendarProps {
   items: Item[];
@@ -30,6 +31,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null);
+  const { playSuccessSound } = useConfirmationSound();
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -57,12 +59,13 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
   const handleMoveItem = useCallback((itemId: string, targetDate: Date) => {
     if (onMoveItemToDate) {
       onMoveItemToDate(itemId, targetDate);
-      // Trigger success animation
+      // Trigger success animation and sound
+      playSuccessSound();
       setRecentlyDroppedId(itemId);
       setTimeout(() => setRecentlyDroppedId(null), 500);
     }
     setDragOverDate(null);
-  }, [onMoveItemToDate]);
+  }, [onMoveItemToDate, playSuccessSound]);
 
   // Touch drag and drop
   const touchDrag = useTouchDragDrop({
