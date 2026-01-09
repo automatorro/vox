@@ -13,7 +13,7 @@ import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 
 interface EisenhowerMatrixProps {
     tasks: Task[];
-    onUpdateTask: (task: Task) => void;
+    onUpdateTask: (task: Task) => Promise<boolean>;
 }
 
 interface QuadrantProps {

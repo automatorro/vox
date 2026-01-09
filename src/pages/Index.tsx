@@ -198,7 +198,7 @@ const Index = () => {
     setEditDrawerOpen(true);
   };
 
-  const handleUpdateItem = async (updatedItem: Item) => {
+  const handleUpdateItem = async (updatedItem: Item): Promise<boolean> => {
     const success = await updateItem(updatedItem);
 
     if (success) {
@@ -213,6 +213,7 @@ const Index = () => {
         description: updatedItem.title,
       });
     }
+    return success;
   };
 
   const handleDeleteItem = async (id: string) => {
@@ -425,7 +426,7 @@ const Index = () => {
         ) : (
           <EisenhowerMatrix
             tasks={allTasks}
-            onUpdateTask={(task) => handleUpdateItem(task)}
+            onUpdateTask={handleUpdateItem}
           />
         )}
       </main>
