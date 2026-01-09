@@ -17,13 +17,20 @@ serve(async (req) => {
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!; // Use service role for DB access
         const supabase = createClient(supabaseUrl, supabaseKey);
 
-        const { transcript, language, timezoneOffset } = await req.json();
+        const { transcript, language, timezoneOffset = 0 } = await req.json();
         const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
         if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-        const now = new Date();
-        const today = now.toISOString().split('T')[0];
+        // Calculate user's local date based on their timezone offset
+        const serverNow = new Date();
+        const userLocalTime = new Date(serverNow.getTime() - (timezoneOffset * 60 * 1000));
+        const today = userLocalTime.toISOString().split('T')[0];
+        
+        // Calculate tomorrow in user's timezone
+        const tomorrowDate = new Date(userLocalTime);
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrow = tomorrowDate.toISOString().split('T')[0];
 
         // 2. Define Tools accessible to the AI
         const toolsDefinition = `
@@ -53,7 +60,15 @@ If you have enough information to answer the user directly (or after tool use), 
         // 3. First LLM Call - Planning
         const systemPrompt = `You are VOX, an intelligent productivity assistant.
 Current Date: ${today}
+Tomorrow's Date: ${tomorrow}
+User's Timezone Offset: ${timezoneOffset} minutes from UTC
 Language: ${language || 'RO'}
+
+CRITICAL DATE HANDLING RULES:
+- "azi" or "today" = ${today}
+- "mâine" or "tomorrow" = ${tomorrow}
+- When user says "tomorrow" or "mâine", ALWAYS use ${tomorrow} as the date
+- For reminders, use the full ISO datetime format: YYYY-MM-DDTHH:mm:ss
 
 ${toolsDefinition}
 

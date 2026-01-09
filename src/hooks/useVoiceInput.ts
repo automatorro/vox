@@ -153,9 +153,13 @@ export const useVoiceInput = ({
         return date.toDateString() === today.toDateString();
       });
 
+      // Get user's timezone offset in minutes
+      const timezoneOffset = new Date().getTimezoneOffset();
+
       const context = {
         transcript,
         language: detectedLanguage,
+        timezoneOffset, // Send timezone offset to edge function
         existingItems: relevantItems.map(item => ({
           id: item.id,
           type: item.type,
