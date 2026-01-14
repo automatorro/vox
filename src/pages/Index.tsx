@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid } from "lucide-react";
@@ -18,6 +18,7 @@ import { GoogleCalendarSettings } from "@/components/GoogleCalendarSettings";
 import { AIPrioritization } from "@/components/AIPrioritization";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
+import { ConflictResolutionModal, ConflictPair } from "@/components/ConflictResolutionModal";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -47,6 +48,8 @@ const Index = () => {
   const [voiceConfirmationOpen, setVoiceConfirmationOpen] = useState(false);
   const [voiceConversationalOpen, setVoiceConversationalOpen] = useState(false);
   const [morningSummaryOpen, setMorningSummaryOpen] = useState(false);
+  const [conflictModalOpen, setConflictModalOpen] = useState(false);
+  const [activeConflicts, setActiveConflicts] = useState<ConflictPair[]>([]);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
@@ -75,11 +78,18 @@ const Index = () => {
     deleteEvent: deleteGoogleEvent,
   } = useGoogleCalendar(handleEventsImported);
 
+  // Callback when conflicts are detected
+  const handleConflictsDetected = useCallback((conflicts: ConflictPair[]) => {
+    setActiveConflicts(conflicts);
+    setConflictModalOpen(true);
+  }, []);
+
   const {
     permission,
     requestPermission,
     runAllChecks,
-  } = useNotifications(items, notificationSettings);
+    detectedConflicts,
+  } = useNotifications(items, notificationSettings, handleConflictsDetected);
 
   // Sync notification settings from profile
   useEffect(() => {
@@ -299,6 +309,8 @@ const Index = () => {
         onSettingsClick={() => setNotificationSettingsOpen(true)}
         onGoogleCalendarClick={() => setGoogleCalendarSettingsOpen(true)}
         isGoogleConnected={isGoogleConnected}
+        conflictCount={detectedConflicts.length}
+        onConflictsClick={() => setConflictModalOpen(true)}
       />
 
       {/* User info & View Toggle */}
@@ -511,6 +523,30 @@ const Index = () => {
         onConnect={connectGoogle}
         onDisconnect={disconnectGoogle}
         onSync={syncGoogleEvents}
+      />
+
+      {/* Conflict Resolution Modal */}
+      <ConflictResolutionModal
+        open={conflictModalOpen}
+        onOpenChange={setConflictModalOpen}
+        conflicts={activeConflicts.length > 0 ? activeConflicts : detectedConflicts}
+        onReschedule={(eventId) => {
+          const event = items.find(i => i.id === eventId);
+          if (event) {
+            setEditingItem(event);
+            setEditDrawerOpen(true);
+            setConflictModalOpen(false);
+          }
+        }}
+        onDelete={(eventId) => {
+          handleDeleteItem(eventId);
+          setActiveConflicts(prev => prev.filter(c => 
+            c.event1.id !== eventId && c.event2.id !== eventId
+          ));
+        }}
+        onIgnore={() => {
+          // Simply hide from active conflicts, the actual list is managed by the modal
+        }}
       />
     </div>
   );
