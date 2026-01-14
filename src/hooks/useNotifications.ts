@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Item, Task } from '@/types';
+import { Item, Task, Event } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { format, isToday, isTomorrow, differenceInHours, startOfDay, isSameDay } from 'date-fns';
+import { format, isToday, isTomorrow, differenceInHours, startOfDay } from 'date-fns';
 import { ro } from 'date-fns/locale';
 
 interface NotificationSettings {
@@ -11,11 +11,22 @@ interface NotificationSettings {
   email: string;
 }
 
+export interface ConflictPair {
+  event1: Event;
+  event2: Event;
+  overlapMinutes: number;
+}
+
 const OVERLOAD_THRESHOLD = 5; // Max items per day before warning
 const DEADLINE_WARNING_HOURS = 24; // Warn 24h before deadline
 
-export const useNotifications = (items: Item[], settings: NotificationSettings) => {
+export const useNotifications = (
+  items: Item[], 
+  settings: NotificationSettings,
+  onConflictsDetected?: (conflicts: ConflictPair[]) => void
+) => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
+  const [detectedConflicts, setDetectedConflicts] = useState<ConflictPair[]>([]);
 
   // Request push notification permission
   const requestPermission = useCallback(async () => {
@@ -135,7 +146,7 @@ export const useNotifications = (items: Item[], settings: NotificationSettings) 
       if (item.type === 'task') {
         itemDate = (item as Task).deadline;
       } else if (item.type === 'event') {
-        itemDate = (item as any).startTime;
+        itemDate = (item as Event).startTime;
       } else {
         itemDate = (item as any).time;
       }
@@ -186,10 +197,10 @@ export const useNotifications = (items: Item[], settings: NotificationSettings) 
     return overloadedDays;
   }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification]);
 
-  // Check for conflicts (overlapping events)
+  // Check for conflicts (overlapping events) - returns detailed conflict pairs
   const checkConflicts = useCallback(() => {
-    const events = items.filter((item) => item.type === 'event') as any[];
-    const conflicts: Array<{ title: string }> = [];
+    const events = items.filter((item) => item.type === 'event') as Event[];
+    const conflictPairs: ConflictPair[] = [];
 
     for (let i = 0; i < events.length; i++) {
       for (let j = i + 1; j < events.length; j++) {
@@ -203,40 +214,62 @@ export const useNotifications = (items: Item[], settings: NotificationSettings) 
 
         // Check for overlap
         if (start1 < end2 && start2 < end1) {
-          conflicts.push({ title: event1.title });
-          conflicts.push({ title: event2.title });
+          // Calculate overlap duration
+          const overlapStart = start1 > start2 ? start1 : start2;
+          const overlapEnd = end1 < end2 ? end1 : end2;
+          const overlapMinutes = Math.round((overlapEnd.getTime() - overlapStart.getTime()) / 60000);
+
+          conflictPairs.push({
+            event1,
+            event2,
+            overlapMinutes,
+          });
         }
       }
     }
 
-    if (conflicts.length > 0) {
-      const uniqueConflicts = conflicts.filter(
-        (item, index, self) => self.findIndex((t) => t.title === item.title) === index
-      );
+    // Update state
+    setDetectedConflicts(conflictPairs);
+
+    if (conflictPairs.length > 0) {
+      const uniqueEventTitles = new Set<string>();
+      conflictPairs.forEach((pair) => {
+        uniqueEventTitles.add(pair.event1.title);
+        uniqueEventTitles.add(pair.event2.title);
+      });
 
       // Push notification
       if (settings.pushEnabled) {
         sendPushNotification(
           '🔴 Conflict de programare!',
-          `${uniqueConflicts.length} evenimente se suprapun.`
+          `${conflictPairs.length} conflict${conflictPairs.length === 1 ? '' : 'e'} detectat${conflictPairs.length === 1 ? '' : 'e'}.`
         );
       }
 
       // Email notification
-      sendEmailNotification('conflict', uniqueConflicts);
+      sendEmailNotification('conflict', Array.from(uniqueEventTitles).map(title => ({ title })));
 
-      // Toast notification
-      toast({
-        title: '🔴 Conflict detectat',
-        description: `${uniqueConflicts.length} evenimente se suprapun`,
-        variant: 'destructive',
-      });
-
-      return uniqueConflicts;
+      // Toast notification with action button
+      if (onConflictsDetected) {
+        toast({
+          title: '🔴 Conflicte detectate',
+          description: `${conflictPairs.length} eveniment${conflictPairs.length === 1 ? '' : 'e'} se suprapun${conflictPairs.length === 1 ? 'e' : ''}`,
+          variant: 'destructive',
+          duration: 10000,
+        });
+        // Trigger callback immediately so component can open modal
+        onConflictsDetected(conflictPairs);
+      } else {
+        toast({
+          title: '🔴 Conflicte detectate',
+          description: `${conflictPairs.length} eveniment${conflictPairs.length === 1 ? '' : 'e'} se suprapun${conflictPairs.length === 1 ? 'e' : ''}`,
+          variant: 'destructive',
+        });
+      }
     }
 
-    return [];
-  }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification]);
+    return conflictPairs;
+  }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification, onConflictsDetected]);
 
   // Run all checks
   const runAllChecks = useCallback(() => {
@@ -253,5 +286,6 @@ export const useNotifications = (items: Item[], settings: NotificationSettings) 
     checkOverload,
     checkConflicts,
     runAllChecks,
+    detectedConflicts,
   };
 };
