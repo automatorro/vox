@@ -1,13 +1,18 @@
 import { useState } from 'react';
-import { format, addDays, startOfTomorrow } from 'date-fns';
+import { format, addDays, isSameDay, startOfDay } from 'date-fns';
 import { ro } from 'date-fns/locale';
-import { AlertTriangle, Calendar, Trash2, ArrowRight, Clock, CheckCircle2, X } from 'lucide-react';
+import { AlertTriangle, Calendar, Trash2, ArrowRight, Clock, CheckCircle2, X, Eye } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Item, Task, Event, Reminder } from '@/types';
@@ -22,6 +27,7 @@ interface OverloadResolutionModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   overloadedDays: OverloadedDay[];
+  allItems: Item[];
   onReschedule: (itemId: string, newDate: Date) => void;
   onDelete: (itemId: string) => void;
   onEditItem: (item: Item) => void;
@@ -31,6 +37,7 @@ export const OverloadResolutionModal = ({
   open,
   onOpenChange,
   overloadedDays,
+  allItems,
   onReschedule,
   onDelete,
   onEditItem,
@@ -38,6 +45,20 @@ export const OverloadResolutionModal = ({
   const [ignoredDays, setIgnoredDays] = useState<Set<string>>(new Set());
 
   const activeDays = overloadedDays.filter(day => !ignoredDays.has(day.date));
+
+  const getItemDate = (item: Item): Date => {
+    if (item.type === 'task') {
+      return new Date((item as Task).deadline);
+    } else if (item.type === 'event') {
+      return new Date((item as Event).startTime);
+    } else {
+      return new Date((item as Reminder).time);
+    }
+  };
+
+  const getItemsForDate = (date: Date): Item[] => {
+    return allItems.filter(item => isSameDay(getItemDate(item), date));
+  };
 
   const formatItemTime = (item: Item): string => {
     if (item.type === 'task') {
@@ -50,14 +71,24 @@ export const OverloadResolutionModal = ({
     }
   };
 
+  const formatItemTimeShort = (item: Item): string => {
+    if (item.type === 'task') {
+      return format(new Date((item as Task).deadline), 'HH:mm', { locale: ro });
+    } else if (item.type === 'event') {
+      return format(new Date((item as Event).startTime), 'HH:mm', { locale: ro });
+    } else {
+      return format(new Date((item as Reminder).time), 'HH:mm', { locale: ro });
+    }
+  };
+
   const getItemIcon = (item: Item) => {
     switch (item.type) {
       case 'task':
-        return <CheckCircle2 className="h-4 w-4 text-blue-400" />;
+        return <CheckCircle2 className="h-3.5 w-3.5 text-blue-400" />;
       case 'event':
-        return <Calendar className="h-4 w-4 text-emerald-400" />;
+        return <Calendar className="h-3.5 w-3.5 text-emerald-400" />;
       case 'reminder':
-        return <Clock className="h-4 w-4 text-amber-400" />;
+        return <Clock className="h-3.5 w-3.5 text-amber-400" />;
     }
   };
 
@@ -76,17 +107,78 @@ export const OverloadResolutionModal = ({
     }
   };
 
+  const getLoadIndicator = (count: number) => {
+    if (count === 0) return { color: 'text-green-500', label: 'Liberă' };
+    if (count < 3) return { color: 'text-green-500', label: 'Lejer' };
+    if (count < 5) return { color: 'text-amber-500', label: 'Moderat' };
+    return { color: 'text-red-500', label: 'Încărcat' };
+  };
+
   const handleIgnoreDay = (dateKey: string) => {
     setIgnoredDays(prev => new Set(prev).add(dateKey));
   };
 
-  const getSuggestedDates = (date: string): Date[] => {
+  const getSuggestedDates = (date: string): { date: Date; label: string }[] => {
     const baseDate = new Date(date);
     return [
-      addDays(baseDate, 1),
-      addDays(baseDate, 2),
-      addDays(baseDate, 7),
+      { date: addDays(baseDate, 1), label: 'Mâine' },
+      { date: addDays(baseDate, 2), label: 'Poimâine' },
+      { date: addDays(baseDate, 7), label: 'Săpt. viitoare' },
     ];
+  };
+
+  const DestinationPreview = ({ targetDate, currentItemId }: { targetDate: Date; currentItemId: string }) => {
+    const existingItems = getItemsForDate(targetDate).filter(item => item.id !== currentItemId);
+    const loadIndicator = getLoadIndicator(existingItems.length);
+
+    return (
+      <div className="w-64">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="font-semibold text-sm">
+              {format(targetDate, 'EEEE', { locale: ro })}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {format(targetDate, 'd MMMM yyyy', { locale: ro })}
+            </p>
+          </div>
+          <div className={`text-xs font-medium ${loadIndicator.color}`}>
+            {loadIndicator.label}
+          </div>
+        </div>
+
+        {existingItems.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">
+            <CheckCircle2 className="h-8 w-8 mx-auto mb-2 text-green-500/50" />
+            <p className="text-xs">Ziua este liberă!</p>
+          </div>
+        ) : (
+          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            {existingItems.slice(0, 5).map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-2 p-1.5 rounded bg-muted/50 text-xs"
+              >
+                {getItemIcon(item)}
+                <span className="truncate flex-1">{item.title}</span>
+                <span className="text-muted-foreground">{formatItemTimeShort(item)}</span>
+              </div>
+            ))}
+            {existingItems.length > 5 && (
+              <p className="text-xs text-muted-foreground text-center pt-1">
+                +{existingItems.length - 5} mai mult{existingItems.length - 5 > 1 ? 'e' : ''}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="mt-3 pt-3 border-t border-border">
+          <p className="text-xs text-muted-foreground">
+            După mutare: <span className="font-medium text-foreground">{existingItems.length + 1} itemi</span>
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -155,18 +247,25 @@ export const OverloadResolutionModal = ({
 
                         {/* Actions */}
                         <div className="flex flex-wrap gap-2 mt-3">
-                          {/* Quick reschedule buttons */}
-                          {getSuggestedDates(day.date).map((suggestedDate, idx) => (
-                            <Button
-                              key={idx}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onReschedule(item.id, suggestedDate)}
-                              className="text-xs h-7 px-2"
-                            >
-                              <ArrowRight className="h-3 w-3 mr-1" />
-                              {idx === 0 ? 'Mâine' : idx === 1 ? 'Poimâine' : 'Săpt. viitoare'}
-                            </Button>
+                          {/* Quick reschedule buttons with preview */}
+                          {getSuggestedDates(day.date).map((suggested, idx) => (
+                            <HoverCard key={idx} openDelay={300} closeDelay={100}>
+                              <HoverCardTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onReschedule(item.id, suggested.date)}
+                                  className="text-xs h-7 px-2 group"
+                                >
+                                  <ArrowRight className="h-3 w-3 mr-1" />
+                                  {suggested.label}
+                                  <Eye className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-50 transition-opacity" />
+                                </Button>
+                              </HoverCardTrigger>
+                              <HoverCardContent side="top" align="start" className="p-3">
+                                <DestinationPreview targetDate={suggested.date} currentItemId={item.id} />
+                              </HoverCardContent>
+                            </HoverCard>
                           ))}
                           
                           <Button

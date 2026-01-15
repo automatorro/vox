@@ -566,6 +566,7 @@ const Index = () => {
         open={overloadModalOpen}
         onOpenChange={setOverloadModalOpen}
         overloadedDays={activeOverloads.length > 0 ? activeOverloads : detectedOverloads}
+        allItems={items}
         onReschedule={handleMoveItemToDate}
         onDelete={handleDeleteItem}
         onEditItem={(item) => {
