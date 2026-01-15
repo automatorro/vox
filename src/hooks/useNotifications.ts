@@ -17,16 +17,24 @@ export interface ConflictPair {
   overlapMinutes: number;
 }
 
+export interface OverloadedDay {
+  date: string;
+  count: number;
+  items: Item[];
+}
+
 const OVERLOAD_THRESHOLD = 5; // Max items per day before warning
 const DEADLINE_WARNING_HOURS = 24; // Warn 24h before deadline
 
 export const useNotifications = (
   items: Item[], 
   settings: NotificationSettings,
-  onConflictsDetected?: (conflicts: ConflictPair[]) => void
+  onConflictsDetected?: (conflicts: ConflictPair[]) => void,
+  onOverloadDetected?: (overloadedDays: OverloadedDay[]) => void
 ) => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [detectedConflicts, setDetectedConflicts] = useState<ConflictPair[]>([]);
+  const [detectedOverloads, setDetectedOverloads] = useState<OverloadedDay[]>([]);
 
   // Request push notification permission
   const requestPermission = useCallback(async () => {
@@ -137,7 +145,7 @@ export const useNotifications = (
   }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification]);
 
   // Check for overloaded days
-  const checkOverload = useCallback(() => {
+  const checkOverload = useCallback((): OverloadedDay[] => {
     const dayMap = new Map<string, Item[]>();
 
     items.forEach((item) => {
@@ -159,7 +167,7 @@ export const useNotifications = (
       dayMap.get(dayKey)!.push(item);
     });
 
-    const overloadedDays: Array<{ date: string; count: number; items: Item[] }> = [];
+    const overloadedDays: OverloadedDay[] = [];
 
     dayMap.forEach((dayItems, dateKey) => {
       if (dayItems.length >= OVERLOAD_THRESHOLD) {
@@ -170,6 +178,9 @@ export const useNotifications = (
         });
       }
     });
+
+    // Update state
+    setDetectedOverloads(overloadedDays);
 
     if (overloadedDays.length > 0) {
       const overloadItems = overloadedDays[0].items.map((item) => ({
@@ -187,15 +198,24 @@ export const useNotifications = (
       // Email notification
       sendEmailNotification('overload', overloadItems);
 
-      // Toast notification
-      toast({
-        title: '⚠️ Supraîncărcare detectată',
-        description: `Ai ${overloadedDays[0].count} itemi pentru ${format(new Date(overloadedDays[0].date), 'd MMMM', { locale: ro })}`,
-      });
+      // Toast notification with callback trigger
+      if (onOverloadDetected) {
+        toast({
+          title: '⚠️ Supraîncărcare detectată',
+          description: `${overloadedDays.length} zi${overloadedDays.length > 1 ? 'le' : ''} cu prea mulți itemi`,
+          duration: 10000,
+        });
+        onOverloadDetected(overloadedDays);
+      } else {
+        toast({
+          title: '⚠️ Supraîncărcare detectată',
+          description: `Ai ${overloadedDays[0].count} itemi pentru ${format(new Date(overloadedDays[0].date), 'd MMMM', { locale: ro })}`,
+        });
+      }
     }
 
     return overloadedDays;
-  }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification]);
+  }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification, onOverloadDetected]);
 
   // Check for conflicts (overlapping events) - returns detailed conflict pairs
   const checkConflicts = useCallback(() => {
@@ -287,5 +307,6 @@ export const useNotifications = (
     checkConflicts,
     runAllChecks,
     detectedConflicts,
+    detectedOverloads,
   };
 };

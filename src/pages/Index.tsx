@@ -19,6 +19,7 @@ import { AIPrioritization } from "@/components/AIPrioritization";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
 import { ConflictResolutionModal, ConflictPair } from "@/components/ConflictResolutionModal";
+import { OverloadResolutionModal, OverloadedDay } from "@/components/OverloadResolutionModal";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -50,6 +51,8 @@ const Index = () => {
   const [morningSummaryOpen, setMorningSummaryOpen] = useState(false);
   const [conflictModalOpen, setConflictModalOpen] = useState(false);
   const [activeConflicts, setActiveConflicts] = useState<ConflictPair[]>([]);
+  const [overloadModalOpen, setOverloadModalOpen] = useState(false);
+  const [activeOverloads, setActiveOverloads] = useState<OverloadedDay[]>([]);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
@@ -84,12 +87,19 @@ const Index = () => {
     setConflictModalOpen(true);
   }, []);
 
+  // Callback when overload is detected
+  const handleOverloadDetected = useCallback((overloadedDays: OverloadedDay[]) => {
+    setActiveOverloads(overloadedDays);
+    setOverloadModalOpen(true);
+  }, []);
+
   const {
     permission,
     requestPermission,
     runAllChecks,
     detectedConflicts,
-  } = useNotifications(items, notificationSettings, handleConflictsDetected);
+    detectedOverloads,
+  } = useNotifications(items, notificationSettings, handleConflictsDetected, handleOverloadDetected);
 
   // Sync notification settings from profile
   useEffect(() => {
@@ -311,6 +321,8 @@ const Index = () => {
         isGoogleConnected={isGoogleConnected}
         conflictCount={detectedConflicts.length}
         onConflictsClick={() => setConflictModalOpen(true)}
+        overloadCount={detectedOverloads.length}
+        onOverloadClick={() => setOverloadModalOpen(true)}
       />
 
       {/* User info & View Toggle */}
@@ -546,6 +558,20 @@ const Index = () => {
         }}
         onIgnore={() => {
           // Simply hide from active conflicts, the actual list is managed by the modal
+        }}
+      />
+
+      {/* Overload Resolution Modal */}
+      <OverloadResolutionModal
+        open={overloadModalOpen}
+        onOpenChange={setOverloadModalOpen}
+        overloadedDays={activeOverloads.length > 0 ? activeOverloads : detectedOverloads}
+        onReschedule={handleMoveItemToDate}
+        onDelete={handleDeleteItem}
+        onEditItem={(item) => {
+          setEditingItem(item);
+          setEditDrawerOpen(true);
+          setOverloadModalOpen(false);
         }}
       />
     </div>
