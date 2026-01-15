@@ -1,4 +1,4 @@
-import { Calendar, Bell, Link2, AlertTriangle } from "lucide-react";
+import { Calendar, Bell, Link2, AlertTriangle, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
@@ -8,6 +8,8 @@ interface HeaderProps {
   isGoogleConnected?: boolean;
   conflictCount?: number;
   onConflictsClick?: () => void;
+  overloadCount?: number;
+  onOverloadClick?: () => void;
 }
 
 export const Header = ({ 
@@ -17,6 +19,8 @@ export const Header = ({
   isGoogleConnected,
   conflictCount = 0,
   onConflictsClick,
+  overloadCount = 0,
+  onOverloadClick,
 }: HeaderProps) => {
   return (
     <header className="flex items-center justify-between px-6 py-4">
@@ -31,6 +35,21 @@ export const Header = ({
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Overload indicator */}
+        {overloadCount > 0 && (
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onOverloadClick}
+            className="text-amber-500 hover:text-amber-500 hover:bg-amber-500/10 relative"
+            title={`${overloadCount} zi${overloadCount === 1 ? '' : 'le'} supraîncărcat${overloadCount === 1 ? 'ă' : 'e'}`}
+          >
+            <CalendarClock className="h-5 w-5" />
+            <div className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center justify-center px-1">
+              {overloadCount}
+            </div>
+          </Button>
+        )}
         {/* Conflicts indicator */}
         {conflictCount > 0 && (
           <Button 
