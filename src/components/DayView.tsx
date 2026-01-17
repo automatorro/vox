@@ -168,7 +168,7 @@ export const DayView = ({
               onTouchCancel={touchDrag.handleTouchCancel}
               style={{ animationDelay: `${index * 0.05}s` }}
               className={cn(
-                "animate-fade-in-up relative group transition-all duration-200 touch-none",
+                "animate-fade-in-up relative group transition-all duration-200",
                 draggedId === item.id && "opacity-50 scale-95",
                 dragOverId === item.id && "translate-y-2",
                 "[&.touch-drag-over]:ring-2 [&.touch-drag-over]:ring-primary [&.touch-drag-over]:scale-[1.02]"
@@ -181,7 +181,7 @@ export const DayView = ({
               
               <div className="flex items-center gap-2">
                 {/* Drag handle */}
-                <div className="opacity-0 group-hover:opacity-100 md:transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground touch:opacity-100">
+                <div className="opacity-30 md:opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
                   <GripVertical className="h-5 w-5" />
                 </div>
                 

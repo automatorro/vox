@@ -449,8 +449,10 @@ const Index = () => {
           />
         ) : (
           <EisenhowerMatrix
-            tasks={allTasks}
-            onUpdateTask={handleUpdateItem}
+            items={items}
+            onUpdateItem={handleUpdateItem}
+            onEditItem={handleEditItem}
+            onDeleteItem={handleDeleteItem}
           />
         )}
       </main>
