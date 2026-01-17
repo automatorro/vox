@@ -207,7 +207,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       onTouchEnd={touchDrag.handleTouchEnd}
                       onTouchCancel={touchDrag.handleTouchCancel}
                       className={cn(
-                        "flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
+                        "flex items-center gap-1 text-[10px] text-event truncate cursor-move hover:bg-accent/30 rounded px-0.5",
                         recentlyDroppedId === event.id && "animate-drop-success"
                       )}
                     >
@@ -227,7 +227,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       onTouchEnd={touchDrag.handleTouchEnd}
                       onTouchCancel={touchDrag.handleTouchCancel}
                       className={cn(
-                        "flex items-center gap-1 text-[10px] truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
+                        "flex items-center gap-1 text-[10px] truncate cursor-move hover:bg-accent/30 rounded px-0.5",
                         (task as Task).completed ? "text-muted-foreground line-through" : "text-task",
                         recentlyDroppedId === task.id && "animate-drop-success"
                       )}
@@ -248,7 +248,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
                       onTouchEnd={touchDrag.handleTouchEnd}
                       onTouchCancel={touchDrag.handleTouchCancel}
                       className={cn(
-                        "flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5 touch-none",
+                        "flex items-center gap-1 text-[10px] text-reminder truncate cursor-move hover:bg-accent/30 rounded px-0.5",
                         recentlyDroppedId === reminder.id && "animate-drop-success"
                       )}
                     >
