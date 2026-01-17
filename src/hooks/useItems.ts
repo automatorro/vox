@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Item, Task, Event, Reminder, RecurrenceType } from '@/types';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 type DbItemType = 'task' | 'event' | 'reminder';
 type DbPriority = 'low' | 'medium' | 'high' | 'critical';
@@ -109,9 +110,57 @@ export const useItems = (userId: string | undefined) => {
     setLoading(false);
   }, [userId]);
 
+  // Initial fetch
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // Realtime subscription for live sync across all views
+  useEffect(() => {
+    if (!userId) return;
+
+    console.log('Setting up realtime subscription for items');
+
+    const channel = supabase
+      .channel('items-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'items',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload: RealtimePostgresChangesPayload<DbItem>) => {
+          console.log('Realtime change received:', payload.eventType, payload);
+
+          if (payload.eventType === 'INSERT') {
+            const newItem = dbItemToItem(payload.new as DbItem);
+            setItems(prev => {
+              // Avoid duplicates (in case we already added it optimistically)
+              if (prev.some(i => i.id === newItem.id)) {
+                return prev;
+              }
+              return [newItem, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedItem = dbItemToItem(payload.new as DbItem);
+            setItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as { id: string }).id;
+            setItems(prev => prev.filter(i => i.id !== deletedId));
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
+
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const createItem = async (item: Omit<Item, 'id' | 'createdAt'>): Promise<Item | null> => {
     if (!userId) return null;
@@ -159,12 +208,21 @@ export const useItems = (userId: string | undefined) => {
     }
 
     const newItem = dbItemToItem(data as DbItem);
-    setItems(prev => [newItem, ...prev]);
+    // Optimistic update (realtime will also trigger, but we handle duplicates)
+    setItems(prev => {
+      if (prev.some(i => i.id === newItem.id)) {
+        return prev;
+      }
+      return [newItem, ...prev];
+    });
     return newItem;
   };
 
   const updateItem = async (item: Item): Promise<boolean> => {
     if (!userId) return false;
+
+    // Optimistic update for instant UI feedback
+    setItems(prev => prev.map(i => i.id === item.id ? item : i));
 
     const dbData: Record<string, unknown> = {
       title: item.title,
@@ -202,15 +260,19 @@ export const useItems = (userId: string | undefined) => {
 
     if (error) {
       console.error('Error updating item:', error);
+      // Revert optimistic update on error
+      await fetchItems();
       return false;
     }
 
-    setItems(prev => prev.map(i => i.id === item.id ? item : i));
     return true;
   };
 
   const deleteItem = async (id: string): Promise<boolean> => {
     if (!userId) return false;
+
+    // Optimistic delete for instant UI feedback
+    setItems(prev => prev.filter(i => i.id !== id));
 
     const { error } = await supabase
       .from('items')
@@ -220,10 +282,11 @@ export const useItems = (userId: string | undefined) => {
 
     if (error) {
       console.error('Error deleting item:', error);
+      // Revert on error
+      await fetchItems();
       return false;
     }
 
-    setItems(prev => prev.filter(i => i.id !== id));
     return true;
   };
 

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Item, Task, Event } from '@/types';
+import { Item, Task, Event, Reminder } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { format, isToday, isTomorrow, differenceInHours, startOfDay } from 'date-fns';
+import { format, isToday, isTomorrow, differenceInMinutes, startOfDay } from 'date-fns';
 import { ro } from 'date-fns/locale';
 
 interface NotificationSettings {
@@ -23,8 +23,14 @@ export interface OverloadedDay {
   items: Item[];
 }
 
+interface UpcomingNotification {
+  item: Item;
+  minutesUntil: number;
+  timeLabel: string;
+}
+
 const OVERLOAD_THRESHOLD = 5; // Max items per day before warning
-const DEADLINE_WARNING_HOURS = 24; // Warn 24h before deadline
+const NOTIFICATION_MINUTES_BEFORE = [60, 30, 15, 5]; // Notify at these intervals before event/reminder
 
 export const useNotifications = (
   items: Item[], 
@@ -35,6 +41,7 @@ export const useNotifications = (
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [detectedConflicts, setDetectedConflicts] = useState<ConflictPair[]>([]);
   const [detectedOverloads, setDetectedOverloads] = useState<OverloadedDay[]>([]);
+  const [notifiedItems, setNotifiedItems] = useState<Set<string>>(new Set());
 
   // Request push notification permission
   const requestPermission = useCallback(async () => {
@@ -69,8 +76,8 @@ export const useNotifications = (
 
   // Send email notification
   const sendEmailNotification = useCallback(async (
-    type: 'deadline' | 'overload' | 'conflict',
-    notificationItems: Array<{ title: string; deadline?: string; priority?: string }>
+    type: 'deadline' | 'overload' | 'conflict' | 'reminder' | 'event',
+    notificationItems: Array<{ title: string; deadline?: string; priority?: string; time?: string }>
   ) => {
     if (!settings.emailEnabled || !settings.email) return;
 
@@ -94,7 +101,95 @@ export const useNotifications = (
     }
   }, [settings.emailEnabled, settings.email]);
 
-  // Check for approaching deadlines
+  // Get time for any item type
+  const getItemTime = useCallback((item: Item): Date => {
+    if (item.type === 'task') {
+      return new Date((item as Task).deadline);
+    } else if (item.type === 'event') {
+      return new Date((item as Event).startTime);
+    } else {
+      return new Date((item as Reminder).time);
+    }
+  }, []);
+
+  // Check for upcoming items (events and reminders) that need notification
+  const checkUpcoming = useCallback(() => {
+    const now = new Date();
+    const upcoming: UpcomingNotification[] = [];
+
+    items.forEach((item) => {
+      // Skip completed tasks
+      if (item.type === 'task' && (item as Task).completed) return;
+      // Skip already notified reminders
+      if (item.type === 'reminder' && (item as Reminder).notified) return;
+
+      const itemTime = getItemTime(item);
+      const minutesUntil = differenceInMinutes(itemTime, now);
+
+      // Check if we should notify (within any of our notification windows)
+      const shouldNotify = NOTIFICATION_MINUTES_BEFORE.some(mins => 
+        minutesUntil > 0 && minutesUntil <= mins && minutesUntil > mins - 5
+      );
+
+      if (shouldNotify) {
+        const notificationKey = `${item.id}-${Math.floor(minutesUntil / 5) * 5}`;
+        
+        // Avoid duplicate notifications for the same time window
+        if (!notifiedItems.has(notificationKey)) {
+          const timeLabel = minutesUntil <= 5 
+            ? 'în 5 minute'
+            : minutesUntil <= 15 
+            ? 'în 15 minute'
+            : minutesUntil <= 30 
+            ? 'în 30 minute'
+            : 'într-o oră';
+
+          upcoming.push({
+            item,
+            minutesUntil,
+            timeLabel,
+          });
+
+          // Mark as notified for this window
+          setNotifiedItems(prev => new Set([...prev, notificationKey]));
+        }
+      }
+    });
+
+    // Send notifications for upcoming items
+    upcoming.forEach(({ item, timeLabel }) => {
+      const typeLabels = {
+        task: '📋 Task',
+        event: '📅 Eveniment',
+        reminder: '🔔 Reminder',
+      };
+
+      const title = `${typeLabels[item.type]} ${timeLabel}`;
+      const body = item.title;
+
+      // Push notification
+      if (settings.pushEnabled) {
+        sendPushNotification(title, body);
+      }
+
+      // Toast notification
+      toast({
+        title,
+        description: body,
+      });
+
+      // Email notification
+      if (item.type === 'event') {
+        sendEmailNotification('event', [{ title: item.title, time: timeLabel }]);
+      } else if (item.type === 'reminder') {
+        sendEmailNotification('reminder', [{ title: item.title, time: timeLabel }]);
+      }
+    });
+
+    return upcoming;
+  }, [items, getItemTime, notifiedItems, settings.pushEnabled, sendPushNotification, sendEmailNotification]);
+
+  // Check for approaching deadlines (tasks only)
   const checkDeadlines = useCallback(() => {
     const now = new Date();
     const upcomingDeadlines: Array<{ title: string; deadline: string; priority: string }> = [];
@@ -104,9 +199,11 @@ export const useNotifications = (
       const task = item as Task;
       if (task.completed) return;
 
-      const hoursUntilDeadline = differenceInHours(task.deadline, now);
+      const minutesUntilDeadline = differenceInMinutes(task.deadline, now);
+      const hoursUntilDeadline = minutesUntilDeadline / 60;
 
-      if (hoursUntilDeadline > 0 && hoursUntilDeadline <= DEADLINE_WARNING_HOURS) {
+      // Warn for deadlines within 24 hours
+      if (hoursUntilDeadline > 0 && hoursUntilDeadline <= 24) {
         const deadlineText = isToday(task.deadline)
           ? 'Astăzi'
           : isTomorrow(task.deadline)
@@ -149,16 +246,7 @@ export const useNotifications = (
     const dayMap = new Map<string, Item[]>();
 
     items.forEach((item) => {
-      let itemDate: Date;
-      
-      if (item.type === 'task') {
-        itemDate = (item as Task).deadline;
-      } else if (item.type === 'event') {
-        itemDate = (item as Event).startTime;
-      } else {
-        itemDate = (item as any).time;
-      }
-
+      const itemDate = getItemTime(item);
       const dayKey = format(startOfDay(itemDate), 'yyyy-MM-dd');
       
       if (!dayMap.has(dayKey)) {
@@ -215,9 +303,9 @@ export const useNotifications = (
     }
 
     return overloadedDays;
-  }, [items, settings.pushEnabled, sendPushNotification, sendEmailNotification, onOverloadDetected]);
+  }, [items, getItemTime, settings.pushEnabled, sendPushNotification, sendEmailNotification, onOverloadDetected]);
 
-  // Check for conflicts (overlapping events) - returns detailed conflict pairs
+  // Check for conflicts (overlapping events)
   const checkConflicts = useCallback(() => {
     const events = items.filter((item) => item.type === 'event') as Event[];
     const conflictPairs: ConflictPair[] = [];
@@ -298,6 +386,19 @@ export const useNotifications = (
     checkConflicts();
   }, [checkDeadlines, checkOverload, checkConflicts]);
 
+  // Check for upcoming events/reminders every minute
+  useEffect(() => {
+    if (!settings.pushEnabled) return;
+
+    // Initial check
+    checkUpcoming();
+
+    // Check every minute
+    const interval = setInterval(checkUpcoming, 60000);
+
+    return () => clearInterval(interval);
+  }, [checkUpcoming, settings.pushEnabled]);
+
   return {
     permission,
     requestPermission,
@@ -305,6 +406,7 @@ export const useNotifications = (
     checkDeadlines,
     checkOverload,
     checkConflicts,
+    checkUpcoming,
     runAllChecks,
     detectedConflicts,
     detectedOverloads,
