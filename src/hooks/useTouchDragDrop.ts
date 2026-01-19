@@ -95,7 +95,8 @@ export const useTouchDragDrop = (options: UseTouchDragDropOptions = {}) => {
 
   const handleTouchStart = useCallback((e: React.TouchEvent, id: string) => {
     const touch = e.touches[0];
-    const element = e.currentTarget as HTMLElement;
+    const rawTarget = e.currentTarget as HTMLElement;
+    const element = (rawTarget.closest('[data-touch-drag-root]') as HTMLElement | null) ?? rawTarget;
     touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
     
     // Long press to initiate drag

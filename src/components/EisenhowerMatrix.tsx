@@ -88,7 +88,7 @@ const Quadrant = ({
             data-drop-target
             data-quadrant={variant}
             className={cn(
-                "h-full flex flex-col transition-all duration-200",
+                "min-h-[16rem] md:h-full flex flex-col transition-all duration-200",
                 getVariantStyles(),
                 isDragOver && "ring-2 ring-primary scale-[1.02]",
                 "[&.touch-drag-over]:ring-2 [&.touch-drag-over]:ring-primary [&.touch-drag-over]:scale-[1.02]"
@@ -118,19 +118,25 @@ const Quadrant = ({
                     {items.map(item => (
                             <div
                                 key={item.id}
+                                data-touch-drag-root
                                 draggable
                                 onDragStart={(e) => e.dataTransfer.setData('itemId', item.id)}
-                                onTouchStart={(e) => touchDrag.handleTouchStart(e, item.id)}
-                                onTouchMove={touchDrag.handleTouchMove}
-                                onTouchEnd={touchDrag.handleTouchEnd}
-                                onTouchCancel={touchDrag.handleTouchCancel}
                                 className={cn(
                                     "p-3 rounded-lg border bg-background/80 hover:bg-background shadow-sm cursor-move transition-all active:scale-95 group relative",
                                     recentlyDroppedId === item.id && "animate-drop-success"
                                 )}
                             >
-                                {/* Drag handle for mobile */}
-                                <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-30 group-hover:opacity-60 touch-none">
+                                {/* Drag handle for mobile (touch + long-press) */}
+                                <div
+                                    className="absolute left-1 top-1/2 -translate-y-1/2 opacity-40 group-hover:opacity-70 touch-none select-none p-2 -m-2 rounded-md cursor-grab active:cursor-grabbing"
+                                    onTouchStart={(e) => {
+                                        e.stopPropagation();
+                                        touchDrag.handleTouchStart(e, item.id);
+                                    }}
+                                    onTouchMove={touchDrag.handleTouchMove}
+                                    onTouchEnd={touchDrag.handleTouchEnd}
+                                    onTouchCancel={touchDrag.handleTouchCancel}
+                                >
                                     <GripVertical className="h-4 w-4" />
                                 </div>
                                 
@@ -233,6 +239,12 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
         const q4: Item[] = []; // Not Urgent & Not Important - Do Last
 
         items.forEach(item => {
+            // Tasks marked as completed shouldn't appear in the matrix
+            // (matrix is for prioritizing what still needs attention)
+            if (item.type === 'task' && (item as Task).completed) {
+                return;
+            }
+
             const { isUrgent, isImportant } = getItemPriorityInfo(item);
 
             if (isUrgent && isImportant) q1.push(item);
@@ -387,7 +399,7 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 min-h-0 overflow-y-auto pb-6">
                 <Quadrant
                     title="Fă Acum"
                     description="Urgent & Important"
