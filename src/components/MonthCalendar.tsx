@@ -19,6 +19,7 @@ import { Item, Task, Event, Reminder } from "@/types";
 import { cn } from "@/lib/utils";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 import { useConfirmationSound } from "@/hooks/useConfirmationSound";
+import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
 interface MonthCalendarProps {
   items: Item[];
@@ -31,7 +32,38 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [dragOverDate, setDragOverDate] = useState<Date | null>(null);
   const [recentlyDroppedId, setRecentlyDroppedId] = useState<string | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animationDirection, setAnimationDirection] = useState<'left' | 'right' | null>(null);
   const { playSuccessSound } = useConfirmationSound();
+
+  const goToPrevMonth = useCallback(() => {
+    if (isAnimating) return;
+    setAnimationDirection('right');
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentMonth(prev => subMonths(prev, 1));
+      setIsAnimating(false);
+      setAnimationDirection(null);
+    }, 200);
+  }, [isAnimating]);
+
+  const goToNextMonth = useCallback(() => {
+    if (isAnimating) return;
+    setAnimationDirection('left');
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentMonth(prev => addMonths(prev, 1));
+      setIsAnimating(false);
+      setAnimationDirection(null);
+    }, 200);
+  }, [isAnimating]);
+
+  // Swipe navigation for mobile
+  const { handlers: swipeHandlers, swipeOffset } = useSwipeNavigation({
+    onSwipeLeft: goToNextMonth,
+    onSwipeRight: goToPrevMonth,
+    threshold: 50,
+  });
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -110,7 +142,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onClick={goToPrevMonth}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -127,15 +159,18 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            onClick={goToNextMonth}
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
       </div>
 
-      {/* Calendar Grid */}
-      <div className="glass rounded-2xl p-4 overflow-hidden">
+      {/* Calendar Grid with Swipe */}
+      <div 
+        className="glass rounded-2xl p-4 overflow-hidden touch-pan-y"
+        {...swipeHandlers}
+      >
         {/* Day names header */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {dayNames.map((name) => (
@@ -148,8 +183,17 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
           ))}
         </div>
 
-        {/* Days grid */}
-        <div className="grid grid-cols-7 gap-1">
+        {/* Days grid with animation */}
+        <div 
+          className={cn(
+            "grid grid-cols-7 gap-1 transition-all duration-200",
+            isAnimating && animationDirection === 'left' && "opacity-0 -translate-x-4",
+            isAnimating && animationDirection === 'right' && "opacity-0 translate-x-4",
+          )}
+          style={{
+            transform: swipeOffset && !isAnimating ? `translateX(${swipeOffset * 0.3}px)` : undefined,
+          }}
+        >
           {days.map((dayDate, index) => {
             const dayItems = getItemsForDate(dayDate);
             const isCurrentMonth = isSameMonth(dayDate, currentMonth);
@@ -285,6 +329,11 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
           <span>Reminder</span>
         </div>
       </div>
+
+      {/* Swipe hint for mobile */}
+      <p className="text-center text-xs text-muted-foreground/50 mt-2 md:hidden">
+        ← Glisează pentru a schimba luna →
+      </p>
     </div>
   );
 };
