@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -20,6 +20,7 @@ import { CategoryFilter } from "@/components/CategoryFilter";
 import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
 import { ConflictResolutionModal, ConflictPair } from "@/components/ConflictResolutionModal";
 import { OverloadResolutionModal, OverloadedDay } from "@/components/OverloadResolutionModal";
+import { FocusMode } from "@/components/FocusMode";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -54,6 +55,7 @@ const Index = () => {
   const [overloadModalOpen, setOverloadModalOpen] = useState(false);
   const [activeOverloads, setActiveOverloads] = useState<OverloadedDay[]>([]);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
+  const [focusModeOpen, setFocusModeOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -367,6 +369,17 @@ const Index = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Focus Mode Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFocusModeOpen(true)}
+            className="gap-2"
+          >
+            <Target className="h-4 w-4 text-task" />
+            <span className="hidden sm:inline">Focus</span>
+          </Button>
+
           {/* AI Summary Button */}
           <Button
             variant="ghost"
@@ -576,6 +589,14 @@ const Index = () => {
           setEditDrawerOpen(true);
           setOverloadModalOpen(false);
         }}
+      />
+
+      {/* Focus Mode */}
+      <FocusMode
+        open={focusModeOpen}
+        onOpenChange={setFocusModeOpen}
+        tasks={allTasks}
+        onCompleteTask={handleCompleteTask}
       />
     </div>
   );
