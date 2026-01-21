@@ -93,7 +93,7 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden p-0">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden p-0" aria-describedby={undefined}>
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
@@ -275,7 +275,7 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
                 </div>
               </div>
             ) : (
-              <ScrollArea className="h-[200px] -mx-2">
+              <div className="h-[200px] overflow-y-auto -mx-2">
                 <div className="space-y-2 px-2">
                   {incompleteTasks.length === 0 ? (
                     <div className="text-center text-muted-foreground py-8">
@@ -284,18 +284,26 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
                     </div>
                   ) : (
                     incompleteTasks.map(task => (
-                      <button
+                      <div
                         key={task.id}
+                        role="button"
+                        tabIndex={0}
                         onClick={() => setSelectedTaskId(task.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setSelectedTaskId(task.id);
+                          }
+                        }}
                         className={cn(
-                          "w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left",
+                          "w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left cursor-pointer select-none",
                           selectedTaskId === task.id
                             ? "bg-task/20 border-2 border-task"
                             : "bg-muted/50 hover:bg-muted border-2 border-transparent"
                         )}
                       >
                         <div className={cn(
-                          "w-4 h-4 rounded-full border-2 flex-shrink-0",
+                          "w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center",
                           selectedTaskId === task.id ? "border-task bg-task" : "border-muted-foreground"
                         )}>
                           {selectedTaskId === task.id && (
@@ -311,11 +319,11 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
                             </div>
                           )}
                         </div>
-                      </button>
+                      </div>
                     ))
                   )}
                 </div>
-              </ScrollArea>
+              </div>
             )}
 
             {/* Complete task button */}
