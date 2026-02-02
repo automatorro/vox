@@ -101,6 +101,11 @@
   .glass {
     @apply bg-card/60 backdrop-blur-xl border border-border/50;
   }
+
+  /* Safe area for iOS devices */
+  .safe-area-pb {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
 }
 
 /* Animations */
