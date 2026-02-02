@@ -315,7 +315,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
       <Header
         onCalendarClick={handleCalendarClick}
         onSettingsClick={() => setNotificationSettingsOpen(true)}
@@ -328,56 +328,56 @@ const Index = () => {
       />
 
       {/* User info & View Toggle */}
-      <div className="px-6 mb-4 flex items-center justify-between">
-        <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-card/50 border border-border">
+      <div className="px-4 sm:px-6 py-2 flex items-center justify-between flex-shrink-0">
+        <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-xl bg-card/50 border border-border">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setViewMode('dashboard')}
             className={cn(
-              "gap-2 rounded-lg transition-all",
+              "gap-1 sm:gap-2 rounded-lg transition-all px-2 sm:px-3 h-8",
               viewMode === 'dashboard' && "bg-primary text-primary-foreground hover:bg-primary/90"
             )}
           >
             <LayoutDashboard className="h-4 w-4" />
-            Dashboard
+            <span className="hidden xs:inline text-xs sm:text-sm">Dashboard</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setViewMode('calendar')}
             className={cn(
-              "gap-2 rounded-lg transition-all",
+              "gap-1 sm:gap-2 rounded-lg transition-all px-2 sm:px-3 h-8",
               viewMode === 'calendar' && "bg-primary text-primary-foreground hover:bg-primary/90"
             )}
           >
             <CalendarDays className="h-4 w-4" />
-            Calendar
+            <span className="hidden xs:inline text-xs sm:text-sm">Calendar</span>
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setViewMode('matrix')}
             className={cn(
-              "gap-2 rounded-lg transition-all",
+              "gap-1 sm:gap-2 rounded-lg transition-all px-2 sm:px-3 h-8",
               viewMode === 'matrix' && "bg-primary text-primary-foreground hover:bg-primary/90"
             )}
           >
             <Grid className="h-4 w-4" />
-            Matrix
+            <span className="hidden xs:inline text-xs sm:text-sm">Matrix</span>
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* Focus Mode Button */}
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setFocusModeOpen(true)}
-            className="gap-2"
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
           >
             <Target className="h-4 w-4 text-task" />
-            <span className="hidden sm:inline">Focus</span>
+            <span className="hidden sm:inline text-xs sm:text-sm">Focus</span>
           </Button>
 
           {/* AI Summary Button */}
@@ -385,13 +385,13 @@ const Index = () => {
             variant="ghost"
             size="sm"
             onClick={() => setMorningSummaryOpen(true)}
-            className="gap-2"
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
           >
             <Sparkles className="h-4 w-4 text-primary" />
-            <span className="hidden sm:inline">Rezumat AI</span>
+            <span className="hidden sm:inline text-xs sm:text-sm">Rezumat AI</span>
           </Button>
 
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground hidden md:inline">
             {profile?.full_name || user?.email}
           </span>
           <Button
@@ -406,16 +406,17 @@ const Index = () => {
         </div>
       </div>
 
-      <main className="px-6 pb-32">
+      {/* Scrollable Main Content */}
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-28">
         {viewMode === 'dashboard' ? (
           <>
             {/* Quick Stats */}
-            <section className="mb-6">
+            <section className="mb-4 sm:mb-6">
               <QuickStats items={todayItems} />
             </section>
 
             {/* Category Filter */}
-            <section className="mb-4">
+            <section className="mb-3 sm:mb-4">
               <CategoryFilter
                 categories={categories}
                 selectedCategoryId={filterCategoryId}
@@ -424,7 +425,7 @@ const Index = () => {
             </section>
 
             {/* AI Prioritization */}
-            <section className="mb-6">
+            <section className="mb-4 sm:mb-6">
               <AIPrioritization
                 tasks={allTasks}
                 onReorder={handleReorderTasks}
@@ -432,7 +433,7 @@ const Index = () => {
             </section>
 
             {/* Mini Calendar */}
-            <section className="mb-6">
+            <section className="mb-4 sm:mb-6">
               <MiniCalendar
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
@@ -470,28 +471,31 @@ const Index = () => {
         )}
       </main>
 
-      {/* Floating Buttons */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4">
-        {/* Add Button */}
-        <Button
-          variant="glass"
-          size="icon"
-          className="h-14 w-14 rounded-full"
-          onClick={() => setCreateDrawerOpen(true)}
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
+      {/* Fixed Bottom Action Bar */}
+      <div className="flex-shrink-0 bg-background/80 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-pb">
+        <div className="flex items-center justify-center gap-4">
+          {/* Add Button */}
+          <Button
+            variant="default"
+            size="lg"
+            className="h-12 px-6 rounded-full shadow-lg gap-2"
+            onClick={() => setCreateDrawerOpen(true)}
+          >
+            <Plus className="h-5 w-5" />
+            <span className="font-medium">Adaugă</span>
+          </Button>
 
-        {/* Voice Button */}
-        <VoiceButton
-          onParseComplete={(result) => {
-            setVoiceParseResult(result);
-            // All intents now go to conversational modal which handles create too
-            setVoiceConversationalOpen(true);
-          }}
-          existingItems={items}
-          categories={categories}
-        />
+          {/* Voice Button */}
+          <VoiceButton
+            onParseComplete={(result) => {
+              setVoiceParseResult(result);
+              // All intents now go to conversational modal which handles create too
+              setVoiceConversationalOpen(true);
+            }}
+            existingItems={items}
+            categories={categories}
+          />
+        </div>
       </div>
 
       {/* Voice Conversational Modal - handles all intents including create */}
