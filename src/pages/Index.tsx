@@ -10,7 +10,8 @@ import { MorningSummaryModal } from "@/components/MorningSummaryModal";
 import { DayView } from "@/components/DayView";
 import { MiniCalendar } from "@/components/MiniCalendar";
 import { MonthCalendar } from "@/components/MonthCalendar";
-import { QuickStats } from "@/components/QuickStats";
+import { QuickStats, StatType } from "@/components/QuickStats";
+import { StatsItemsDrawer } from "@/components/StatsItemsDrawer";
 import { CreateItemDrawer } from "@/components/CreateItemDrawer";
 import { EditItemDrawer } from "@/components/EditItemDrawer";
 import { NotificationSettings } from "@/components/NotificationSettings";
@@ -56,6 +57,8 @@ const Index = () => {
   const [activeOverloads, setActiveOverloads] = useState<OverloadedDay[]>([]);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
+  const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
+  const [statsDrawerType, setStatsDrawerType] = useState<StatType>('tasks');
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -412,7 +415,13 @@ const Index = () => {
           <>
             {/* Quick Stats */}
             <section className="mb-4 sm:mb-6">
-              <QuickStats items={todayItems} />
+              <QuickStats 
+                items={todayItems} 
+                onStatClick={(type) => {
+                  setStatsDrawerType(type);
+                  setStatsDrawerOpen(true);
+                }}
+              />
             </section>
 
             {/* Category Filter */}
@@ -601,6 +610,18 @@ const Index = () => {
         onOpenChange={setFocusModeOpen}
         tasks={allTasks}
         onCompleteTask={handleCompleteTask}
+      />
+
+      {/* Stats Items Drawer */}
+      <StatsItemsDrawer
+        open={statsDrawerOpen}
+        onOpenChange={setStatsDrawerOpen}
+        type={statsDrawerType}
+        items={todayItems}
+        categories={categories}
+        onComplete={handleCompleteTask}
+        onEdit={handleEditItem}
+        onDelete={handleDeleteItem}
       />
     </div>
   );
