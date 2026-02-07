@@ -360,14 +360,14 @@ OUTPUT: JSON with time_blocks array
 ### FAZA 1: Fundație Productivitate
 | Task | Status | Data Completare | Note |
 |------|--------|-----------------|------|
-| Creare tabel `focus_sessions` | [ ] | - | - |
-| Creare tabel `productivity_daily_stats` | [ ] | - | - |
-| Hook `useFocusSessions` | [ ] | - | Conectare la Supabase |
-| Actualizare `usePomodoroTimer` pentru persistență | [ ] | - | - |
-| Componentă `ProductivityStats` | [ ] | - | Grafic Recharts |
-| Edge function `aggregate-productivity` | [ ] | - | Cron daily |
-| Pagină/View Statistics | [ ] | - | Tab nou sau modal |
-| **MILESTONE COMPLET** | [ ] | - | - |
+| Creare tabel `focus_sessions` | [x] | 2026-02-07 | Migration aplicată cu succes |
+| Creare tabel `productivity_daily_stats` | [x] | 2026-02-07 | Include streak_days |
+| Hook `useFocusSessions` | [x] | 2026-02-07 | CRUD complet + stats |
+| Actualizare `usePomodoroTimer` pentru persistență | [x] | 2026-02-07 | Integrat în FocusMode |
+| Componentă `ProductivityStats` | [x] | 2026-02-07 | Grafice Recharts weekly/monthly |
+| Edge function `aggregate-productivity` | [ ] | - | Opțional - agregare client-side |
+| Pagină/View Statistics | [x] | 2026-02-07 | Modal din Focus Mode |
+| **MILESTONE COMPLET** | [x] | 2026-02-07 | Faza 1 finalizată |
 
 ---
 
