@@ -46,6 +46,57 @@ export type Database = {
           },
         ]
       }
+      focus_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          duration_seconds: number
+          ended_at: string | null
+          id: string
+          item_id: string | null
+          phase: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          item_id?: string | null
+          phase?: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          duration_seconds?: number
+          ended_at?: string | null
+          id?: string
+          item_id?: string | null
+          phase?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_sessions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "focus_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       items: {
         Row: {
           category_id: string | null
@@ -136,6 +187,53 @@ export type Database = {
           },
           {
             foreignKeyName: "items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      productivity_daily_stats: {
+        Row: {
+          created_at: string
+          date: string
+          focus_minutes: number | null
+          id: string
+          most_productive_hour: number | null
+          sessions_count: number | null
+          streak_days: number | null
+          tasks_completed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          focus_minutes?: number | null
+          id?: string
+          most_productive_hour?: number | null
+          sessions_count?: number | null
+          streak_days?: number | null
+          tasks_completed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          focus_minutes?: number | null
+          id?: string
+          most_productive_hour?: number | null
+          sessions_count?: number | null
+          streak_days?: number | null
+          tasks_completed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "productivity_daily_stats_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"

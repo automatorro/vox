@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { Play, Pause, RotateCcw, SkipForward, Target, Coffee, Flame, Settings2, X, Timer, Check } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Play, Pause, RotateCcw, SkipForward, Target, Coffee, Flame, Settings2, X, Timer, Check, BarChart3 } from "lucide-react";
 import { Task } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Slider } from "@/components/ui/slider";
 import { usePomodoroTimer, PomodoroPhase } from "@/hooks/usePomodoroTimer";
+import { useFocusSessions } from "@/hooks/useFocusSessions";
+import { ProductivityStats } from "@/components/ProductivityStats";
 import { cn } from "@/lib/utils";
 
 interface FocusModeProps {
@@ -25,7 +26,10 @@ const phaseConfig: Record<PomodoroPhase, { label: string; color: string; icon: R
 export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusModeProps) => {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [taskTimeTracking, setTaskTimeTracking] = useState<Record<string, number>>({});
+  const sessionStartTimeRef = useRef<Date | null>(null);
+  const lastPhaseRef = useRef<PomodoroPhase>('idle');
 
   const {
     timeRemaining,
@@ -41,10 +45,54 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
     updateSettings,
   } = usePomodoroTimer();
 
+  const {
+    createSession,
+    completeSession,
+    updateDailyStats,
+    activeSessionId,
+    setActiveSessionId,
+    todayFocusMinutes,
+    todayCompletedSessions,
+    currentStreak,
+  } = useFocusSessions();
+
   const selectedTask = tasks.find(t => t.id === selectedTaskId);
   const incompleteTasks = tasks.filter(t => !t.completed);
 
-  // Track time per task
+  // Track session start and completion for persistence
+  useEffect(() => {
+    // Phase changed - handle session transitions
+    if (phase !== lastPhaseRef.current) {
+      // If starting a work phase, create a new session
+      if (phase === 'work' && isRunning) {
+        sessionStartTimeRef.current = new Date();
+        createSession({
+          item_id: selectedTaskId,
+          phase: 'work',
+        }).then(session => {
+          setActiveSessionId(session.id);
+        }).catch(console.error);
+      }
+      
+      // If completing a work phase (transitioning to break), save the session
+      if (lastPhaseRef.current === 'work' && (phase === 'shortBreak' || phase === 'longBreak')) {
+        if (activeSessionId && sessionStartTimeRef.current) {
+          const duration = Math.floor((new Date().getTime() - sessionStartTimeRef.current.getTime()) / 1000);
+          completeSession(activeSessionId, duration).catch(console.error);
+          updateDailyStats({
+            focusMinutesToAdd: Math.floor(duration / 60),
+            sessionsToAdd: 1,
+            currentHour: new Date().getHours(),
+          }).catch(console.error);
+          sessionStartTimeRef.current = null;
+        }
+      }
+
+      lastPhaseRef.current = phase;
+    }
+  }, [phase, isRunning, selectedTaskId, createSession, completeSession, updateDailyStats, activeSessionId, setActiveSessionId]);
+
+  // Track time per task (local tracking for UI)
   useEffect(() => {
     if (isRunning && phase === 'work' && selectedTaskId) {
       const interval = setInterval(() => {
@@ -82,11 +130,30 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
 
   const handleCompleteTask = () => {
     if (selectedTaskId && onCompleteTask) {
+      // Update daily stats for task completion
+      updateDailyStats({
+        tasksCompletedToAdd: 1,
+      }).catch(console.error);
+      
       onCompleteTask(selectedTaskId);
       setSelectedTaskId(null);
       pause();
       reset();
     }
+  };
+
+  // Handle manual pause - save partial session
+  const handlePause = () => {
+    if (phase === 'work' && activeSessionId && sessionStartTimeRef.current) {
+      const duration = Math.floor((new Date().getTime() - sessionStartTimeRef.current.getTime()) / 1000);
+      completeSession(activeSessionId, duration).catch(console.error);
+      updateDailyStats({
+        focusMinutesToAdd: Math.floor(duration / 60),
+        currentHour: new Date().getHours(),
+      }).catch(console.error);
+      sessionStartTimeRef.current = null;
+    }
+    pause();
   };
 
   const currentPhase = phaseConfig[phase];
@@ -163,7 +230,7 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
               <Button
                 variant={isRunning ? "outline" : "default"}
                 size="lg"
-                onClick={isRunning ? pause : start}
+                onClick={isRunning ? handlePause : start}
                 disabled={!selectedTaskId && phase === 'idle'}
                 className="h-14 w-14 rounded-full"
               >
@@ -210,13 +277,23 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
               <h3 className="font-medium text-sm">
                 {showSettings ? 'Setări Timer' : 'Selectează un task'}
               </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowSettings(!showSettings)}
-              >
-                {showSettings ? <X className="h-4 w-4" /> : <Settings2 className="h-4 w-4" />}
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowStats(true)}
+                  title="Statistici productivitate"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSettings(!showSettings)}
+                >
+                  {showSettings ? <X className="h-4 w-4" /> : <Settings2 className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
 
             {showSettings ? (
@@ -340,6 +417,9 @@ export const FocusMode = ({ open, onOpenChange, tasks, onCompleteTask }: FocusMo
           </div>
         </div>
       </DialogContent>
+
+      {/* Productivity Stats Modal */}
+      <ProductivityStats open={showStats} onOpenChange={setShowStats} />
     </Dialog>
   );
 };
