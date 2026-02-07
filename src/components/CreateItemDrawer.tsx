@@ -449,6 +449,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
                 <SelectItem value="daily">Zilnic</SelectItem>
                 <SelectItem value="weekly">Săptămânal</SelectItem>
                 <SelectItem value="monthly">Lunar</SelectItem>
+                <SelectItem value="yearly">Anual</SelectItem>
               </SelectContent>
             </Select>
 
