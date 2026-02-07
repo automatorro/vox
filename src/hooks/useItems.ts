@@ -5,7 +5,7 @@ import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 type DbItemType = 'task' | 'event' | 'reminder';
 type DbPriority = 'low' | 'medium' | 'high' | 'critical';
-type DbRecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
+type DbRecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 type DbImportance = 'low' | 'high';
 

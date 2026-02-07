@@ -68,6 +68,7 @@ const recurrenceLabels: Record<RecurrenceType, string> = {
   daily: 'Zilnic',
   weekly: 'Săptămânal',
   monthly: 'Lunar',
+  yearly: 'Anual',
 };
 
 export const VoiceConversationalModal = ({

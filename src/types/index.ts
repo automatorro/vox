@@ -1,5 +1,5 @@
 export type Priority = 'low' | 'medium' | 'high' | 'critical';
-export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly';
+export type RecurrenceType = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 interface RecurrenceFields {
   recurrenceType?: RecurrenceType;
