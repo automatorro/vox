@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Item, Task, Event, Reminder } from "@/types";
 import { Category } from "@/hooks/useCategories";
 import { ItemCard } from "@/components/ItemCard";
@@ -9,6 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useSubtaskCounts } from "@/hooks/useSubtasks";
 
 type StatType = 'tasks' | 'events' | 'reminders' | 'completed';
 
@@ -59,6 +61,10 @@ export const StatsItemsDrawer = ({
     return false;
   });
 
+  // Get subtask counts for filtered items
+  const itemIds = useMemo(() => filteredItems.map(i => i.id), [filteredItems]);
+  const { data: subtaskCounts = {} } = useSubtaskCounts(itemIds);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="h-[70vh] rounded-t-2xl">
@@ -90,6 +96,7 @@ export const StatsItemsDrawer = ({
                   key={item.id}
                   item={item}
                   categories={categories}
+                  subtaskProgress={subtaskCounts[item.id]}
                   onComplete={onComplete}
                   onEdit={onEdit}
                   onDelete={onDelete}

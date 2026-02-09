@@ -374,14 +374,14 @@ OUTPUT: JSON with time_blocks array
 ### FAZA 2: Subtasks și Checklist-uri
 | Task | Status | Data Completare | Note |
 |------|--------|-----------------|------|
-| Creare tabel `subtasks` | [ ] | - | - |
-| Hook `useSubtasks` | [ ] | - | - |
-| Componentă `SubtaskList` | [ ] | - | Inline pe ItemCard |
-| Progress bar pe ItemCard | [ ] | - | - |
+| Creare tabel `subtasks` | [x] | 2026-02-09 | Migration cu RLS și Realtime |
+| Hook `useSubtasks` | [x] | 2026-02-09 | CRUD + useSubtaskCounts pentru batch |
+| Componentă `SubtaskList` | [x] | 2026-02-09 | Inline editing cu checkboxes |
+| Progress bar pe ItemCard | [x] | 2026-02-09 | Vizual cu Progress component |
 | Extindere AI Agent pentru breakdown | [ ] | - | Tool `project_breakdown` |
-| Update CreateItemDrawer | [ ] | - | - |
-| Update EditItemDrawer | [ ] | - | - |
-| **MILESTONE COMPLET** | [ ] | - | - |
+| Update CreateItemDrawer | [ ] | - | Opțional - add în create flow |
+| Update EditItemDrawer | [x] | 2026-02-09 | Secțiune subtasks adăugată |
+| **MILESTONE COMPLET** | [~] | - | În curs - lipsește AI breakdown |
 
 ---
 
