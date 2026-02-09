@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { CalendarIcon, Clock, Save, CheckCircle2, Calendar, Bell } from "lucide-react";
+import { CalendarIcon, Clock, Save, CheckCircle2, Calendar, Bell, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CategorySelect } from "@/components/CategorySelect";
+import { SubtaskList } from "@/components/SubtaskList";
 import { Category } from "@/hooks/useCategories";
 import { Task, Event, Reminder, Priority, Item } from "@/types";
 import { cn } from "@/lib/utils";
@@ -289,6 +290,17 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categor
                 onSelect={setCategoryId}
                 onCreateCategory={onCreateCategory}
               />
+
+              {/* Subtasks Section */}
+              {item && (
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <div className="flex items-center gap-2">
+                    <ListChecks className="h-4 w-4 text-muted-foreground" />
+                    <Label>Subtask-uri</Label>
+                  </div>
+                  <SubtaskList itemId={item.id} showProgress={true} />
+                </div>
+              )}
             </>
           )}
 

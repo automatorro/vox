@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen, Repeat } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen, Repeat, ListChecks } from "lucide-react";
 import { Task, Event, Reminder, Priority, RecurrenceType } from "@/types";
 import { Category } from "@/hooks/useCategories";
 import { cn } from "@/lib/utils";
@@ -11,10 +11,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 
 interface ItemCardProps {
   item: Task | Event | Reminder;
   categories?: Category[];
+  subtaskProgress?: { completed: number; total: number };
   onComplete?: (id: string) => void;
   onEdit?: (item: Task | Event | Reminder) => void;
   onDelete?: (id: string) => void;
@@ -35,7 +37,7 @@ const recurrenceLabels: Record<RecurrenceType, string> = {
   yearly: 'Anual',
 };
 
-export const ItemCard = ({ item, categories, onComplete, onEdit, onDelete }: ItemCardProps) => {
+export const ItemCard = ({ item, categories, subtaskProgress, onComplete, onEdit, onDelete }: ItemCardProps) => {
   const isTask = item.type === 'task';
   const isEvent = item.type === 'event';
   const isReminder = item.type === 'reminder';
@@ -43,6 +45,12 @@ export const ItemCard = ({ item, categories, onComplete, onEdit, onDelete }: Ite
   const taskCategory = isTask && (item as Task).categoryId 
     ? categories?.find(c => c.id === (item as Task).categoryId)
     : null;
+
+  // Calculate subtask progress
+  const hasSubtasks = subtaskProgress && subtaskProgress.total > 0;
+  const subtaskProgressPercent = hasSubtasks 
+    ? Math.round((subtaskProgress.completed / subtaskProgress.total) * 100) 
+    : 0;
 
   const getTypeStyles = () => {
     if (isTask) return 'border-l-task bg-task-muted/30';
@@ -112,6 +120,17 @@ export const ItemCard = ({ item, categories, onComplete, onEdit, onDelete }: Ite
           <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
             {(item as Task).description}
           </p>
+        )}
+
+        {/* Subtask Progress Bar */}
+        {hasSubtasks && (
+          <div className="flex items-center gap-2 mt-2">
+            <ListChecks className="h-3.5 w-3.5 text-muted-foreground" />
+            <Progress value={subtaskProgressPercent} className="h-1.5 flex-1 max-w-[100px]" />
+            <span className="text-xs text-muted-foreground">
+              {subtaskProgress.completed}/{subtaskProgress.total}
+            </span>
+          </div>
         )}
 
         {/* Meta info */}

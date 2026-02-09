@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { Item, Task } from "@/types";
@@ -7,6 +7,7 @@ import { ItemCard } from "./ItemCard";
 import { AlertCircle, GripVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
+import { useSubtaskCounts } from "@/hooks/useSubtasks";
 
 interface DayViewProps {
   date: Date;
@@ -36,6 +37,10 @@ export const DayView = ({
   
   // Use items directly without auto-sorting to allow manual reorder
   const sortedItems = [...items];
+
+  // Get subtask counts for all items
+  const itemIds = useMemo(() => items.map(i => i.id), [items]);
+  const { data: subtaskCounts = {} } = useSubtaskCounts(itemIds);
 
   const completedCount = items.filter(i => i.type === 'task' && (i as Task).completed).length;
   const totalTasks = items.filter(i => i.type === 'task').length;
@@ -189,6 +194,7 @@ export const DayView = ({
                   <ItemCard 
                     item={item}
                     categories={categories}
+                    subtaskProgress={subtaskCounts[item.id]}
                     onComplete={onCompleteTask}
                     onEdit={onEditItem}
                     onDelete={onDeleteItem}
