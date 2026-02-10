@@ -110,8 +110,13 @@ export const MorningSummaryModal = ({
         duration: item.type === 'event' ? (item as any).duration : undefined,
       }));
 
+      const now = new Date();
+      const localHour = now.getHours();
+      const localMinutes = now.getMinutes();
+      const timezoneOffset = now.getTimezoneOffset();
+
       const { data, error: invokeError } = await supabase.functions.invoke('morning-summary', {
-        body: { items: itemsData, userName }
+        body: { items: itemsData, userName, localHour, localMinutes, timezoneOffset }
       });
 
       if (invokeError) {
