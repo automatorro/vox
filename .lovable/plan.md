@@ -388,14 +388,15 @@ OUTPUT: JSON with time_blocks array
 ### FAZA 3: PWA și Notificări Native
 | Task | Status | Data Completare | Note |
 |------|--------|-----------------|------|
-| Creare manifest.json | [ ] | - | - |
-| Service Worker basic | [ ] | - | Caching static assets |
-| Offline mode pentru items | [ ] | - | IndexedDB sync |
+| Creare manifest.json | [x] | 2026-02-10 | Via vite-plugin-pwa în vite.config.ts |
+| Service Worker basic | [x] | 2026-02-10 | Workbox auto-update, font caching |
+| Offline mode pentru items | [ ] | - | IndexedDB sync - viitor |
 | Tabel `push_subscriptions` | [ ] | - | - |
 | Edge function `web-push-send` | [ ] | - | - |
 | Integrare Web Push API | [ ] | - | VAPID keys |
-| Install prompt UI | [ ] | - | - |
-| **MILESTONE COMPLET** | [ ] | - | - |
+| Install prompt UI | [x] | 2026-02-10 | Banner cu dismiss + 7 zile cooldown |
+| PWA Icons | [x] | 2026-02-10 | 192px + 512px generate |
+| **MILESTONE COMPLET** | [~] | - | PWA instalabilă, lipsesc push notifications |
 
 ---
 
