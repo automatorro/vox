@@ -24,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { items, userName } = await req.json();
+    const { items, userName, localHour, localMinutes, timezoneOffset } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -32,8 +32,14 @@ serve(async (req) => {
     }
 
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentDate = now.toISOString().split('T')[0];
+    // Use client's local time if provided, otherwise fall back to server time
+    const currentHour = localHour !== undefined ? localHour : now.getHours();
+    const currentMinutes = localMinutes !== undefined ? localMinutes : now.getMinutes();
+    // Calculate local date from timezone offset
+    const localNow = timezoneOffset !== undefined 
+      ? new Date(now.getTime() - timezoneOffset * 60000) 
+      : now;
+    const currentDate = localNow.toISOString().split('T')[0];
 
     // Filter items for today and upcoming week
     const todayItems = (items as ItemData[]).filter((item) => {
@@ -68,7 +74,7 @@ Când faci sugestii, fii specific și orientat spre rezultate.`;
 Generează un rezumat matinal personalizat bazat pe următoarele informații:
 
 **Data de azi:** ${new Date().toLocaleDateString('ro-RO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-**Ora curentă:** ${currentHour}:${now.getMinutes().toString().padStart(2, '0')}
+**Ora curentă locală a utilizatorului:** ${currentHour}:${currentMinutes.toString().padStart(2, '0')}
 
 **Taskuri pentru azi (necompletate):** ${incompleteTasks.length}
 ${incompleteTasks.map(t => `- ${t.title} (prioritate: ${t.priority || 'medie'})`).join('\n') || 'Niciun task'}
