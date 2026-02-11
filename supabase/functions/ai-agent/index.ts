@@ -168,8 +168,29 @@ Decide the next best step. Do you need to use a TOOL?
                 toolResult = `Events found: ${JSON.stringify(events)}`;
             }
             else if (parsed.tool === "project_breakdown") {
-                // Logic for project breakdown would go here (or we ask LLM to do it in next step)
-                toolResult = "Please generate 5 detailed subtasks for this project in the final response.";
+                const { description, deadline } = parsed.args;
+                // Ask LLM to generate subtasks with the project context
+                const breakdownMessages = [
+                    {
+                        role: "system",
+                        content: `You are a project planning expert. Break down the following project into 4-7 actionable subtasks.
+Each subtask should have: title, estimated_duration_minutes, suggested_order.
+Return JSON: { "subtasks": [{ "title": "...", "estimated_duration_minutes": number, "suggested_order": number }] }
+Language: ${language || 'RO'}`
+                    },
+                    {
+                        role: "user",
+                        content: `Project: ${description}\nDeadline: ${deadline}\nBreak this down into actionable subtasks.`
+                    }
+                ];
+                const breakdownResponse = await callLLM(breakdownMessages);
+                try {
+                    const bMatch = breakdownResponse.match(/```(?:json)?\s*([\s\S]*?)```/) || [null, breakdownResponse];
+                    const breakdownData = JSON.parse(bMatch[1]?.trim() || breakdownResponse.trim());
+                    toolResult = `Subtasks generated: ${JSON.stringify(breakdownData.subtasks || breakdownData)}`;
+                } catch {
+                    toolResult = `Generated breakdown: ${breakdownResponse}`;
+                }
             }
 
             // 5. Final LLM Call with Tool Data
