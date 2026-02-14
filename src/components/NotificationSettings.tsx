@@ -18,6 +18,10 @@ interface NotificationSettingsProps {
   onSettingsChange: (settings: { pushEnabled: boolean; emailEnabled: boolean; email: string }) => void;
   onRequestPermission: () => Promise<boolean>;
   permission: NotificationPermission;
+  isPushSubscribed?: boolean;
+  onSubscribePush?: () => Promise<boolean>;
+  onUnsubscribePush?: () => Promise<boolean>;
+  isPushSupported?: boolean;
 }
 
 export const NotificationSettings = ({
@@ -27,6 +31,10 @@ export const NotificationSettings = ({
   onSettingsChange,
   onRequestPermission,
   permission,
+  isPushSubscribed = false,
+  onSubscribePush,
+  onUnsubscribePush,
+  isPushSupported = false,
 }: NotificationSettingsProps) => {
   const [email, setEmail] = useState(settings.email);
 
@@ -35,15 +43,32 @@ export const NotificationSettings = ({
   }, [settings.email]);
 
   const handlePushToggle = async (enabled: boolean) => {
-    if (enabled && permission !== 'granted') {
-      const granted = await onRequestPermission();
-      if (!granted) {
-        toast({
-          title: 'Permisiune refuzată',
-          description: 'Trebuie să permiți notificările în browser.',
-          variant: 'destructive',
-        });
-        return;
+    if (enabled) {
+      if (permission !== 'granted') {
+        const granted = await onRequestPermission();
+        if (!granted) {
+          toast({
+            title: 'Permisiune refuzată',
+            description: 'Trebuie să permiți notificările în browser.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+      // Subscribe to Web Push if supported
+      if (isPushSupported && onSubscribePush) {
+        const subscribed = await onSubscribePush();
+        if (subscribed) {
+          toast({
+            title: 'Push activat! 🔔',
+            description: 'Vei primi notificări push chiar și când aplicația e închisă.',
+          });
+        }
+      }
+    } else {
+      // Unsubscribe from Web Push
+      if (isPushSupported && onUnsubscribePush) {
+        await onUnsubscribePush();
       }
     }
     onSettingsChange({ ...settings, pushEnabled: enabled });

@@ -2,6 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Extend ServiceWorkerRegistration to include pushManager
+declare global {
+  interface ServiceWorkerRegistration {
+    pushManager: PushManager;
+  }
+}
+
 // The VAPID public key - must match the one stored as secret
 const VAPID_PUBLIC_KEY = 'BEcjCKBnCzRYEcQwajjm29oWERVH9FhUzhbM_fqZXE8_GFk7kAju22N3E-N9ARXrgyyk9Ik4LKA_m30gc8GC4VM';
 

@@ -25,6 +25,7 @@ import { FocusMode } from "@/components/FocusMode";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { useAuth } from "@/hooks/useAuth";
 import { useItems } from "@/hooks/useItems";
@@ -105,6 +106,16 @@ const Index = () => {
     detectedConflicts,
     detectedOverloads,
   } = useNotifications(items, notificationSettings, handleConflictsDetected, handleOverloadDetected);
+
+  // Web Push notifications (real push via service worker)
+  const {
+    isSubscribed: isPushSubscribed,
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    sendPush,
+    isSupported: isPushSupported,
+    permission: pushPermission,
+  } = usePushNotifications(user?.id);
 
   // Sync notification settings from profile
   useEffect(() => {
@@ -551,6 +562,10 @@ const Index = () => {
         onSettingsChange={setNotificationSettings}
         onRequestPermission={requestPermission}
         permission={permission}
+        isPushSubscribed={isPushSubscribed}
+        onSubscribePush={subscribePush}
+        onUnsubscribePush={unsubscribePush}
+        isPushSupported={isPushSupported}
       />
 
       {/* Google Calendar Settings */}
