@@ -391,25 +391,25 @@ OUTPUT: JSON with time_blocks array
 | Creare manifest.json | [x] | 2026-02-10 | Via vite-plugin-pwa în vite.config.ts |
 | Service Worker basic | [x] | 2026-02-10 | Workbox auto-update, font caching |
 | Offline mode pentru items | [ ] | - | IndexedDB sync - viitor |
-| Tabel `push_subscriptions` | [ ] | - | - |
-| Edge function `web-push-send` | [ ] | - | - |
-| Integrare Web Push API | [ ] | - | VAPID keys |
+| Tabel `push_subscriptions` | [x] | 2026-02-11 | Migration + RLS |
+| Edge function `web-push-send` | [x] | 2026-02-11 | VAPID + RFC 8291 encryption |
+| Integrare Web Push API | [x] | 2026-02-11 | usePushNotifications hook |
 | Install prompt UI | [x] | 2026-02-10 | Banner cu dismiss + 7 zile cooldown |
 | PWA Icons | [x] | 2026-02-10 | 192px + 512px generate |
-| **MILESTONE COMPLET** | [~] | - | PWA instalabilă, lipsesc push notifications |
+| **MILESTONE COMPLET** | [~] | - | Push notifications implementate, lipsește offline mode |
 
 ---
 
 ### FAZA 4: Smart Scheduling AI
 | Task | Status | Data Completare | Note |
 |------|--------|-----------------|------|
-| Edge function `smart-scheduler` | [ ] | - | - |
-| Gap analysis în calendar | [ ] | - | - |
-| Productivity hours tracking | [ ] | - | Din focus_sessions |
-| Time-blocking suggestions UI | [ ] | - | - |
-| Accept/Reject flow | [ ] | - | - |
-| Integrare Morning Summary | [ ] | - | - |
-| **MILESTONE COMPLET** | [ ] | - | - |
+| Edge function `smart-scheduler` | [x] | 2026-02-11 | Lovable AI cu gemini-3-flash-preview |
+| Gap analysis în calendar | [x] | 2026-02-11 | Integrat în prompt AI |
+| Productivity hours tracking | [x] | 2026-02-11 | Din productivity_daily_stats |
+| Time-blocking suggestions UI | [x] | 2026-02-11 | SmartScheduler component cu timeline |
+| Accept/Reject flow | [x] | 2026-02-11 | Per-block accept/reject cu update item |
+| Integrare Morning Summary | [ ] | - | Buton dedicat "Planifică" în toolbar |
+| **MILESTONE COMPLET** | [~] | - | Funcționalitate core completă |
 
 ---
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -22,6 +22,7 @@ import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
 import { ConflictResolutionModal, ConflictPair } from "@/components/ConflictResolutionModal";
 import { OverloadResolutionModal, OverloadedDay } from "@/components/OverloadResolutionModal";
 import { FocusMode } from "@/components/FocusMode";
+import { SmartScheduler } from "@/components/SmartScheduler";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -58,6 +59,7 @@ const Index = () => {
   const [activeOverloads, setActiveOverloads] = useState<OverloadedDay[]>([]);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
+  const [smartSchedulerOpen, setSmartSchedulerOpen] = useState(false);
   const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
   const [statsDrawerType, setStatsDrawerType] = useState<StatType>('tasks');
   const { toast } = useToast();
@@ -394,6 +396,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Focus</span>
           </Button>
 
+          {/* Smart Scheduler Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSmartSchedulerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <Brain className="h-4 w-4 text-primary" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Planifică</span>
+          </Button>
+
           {/* AI Summary Button */}
           <Button
             variant="ghost"
@@ -625,6 +638,20 @@ const Index = () => {
         onOpenChange={setFocusModeOpen}
         tasks={allTasks}
         onCompleteTask={handleCompleteTask}
+      />
+
+      {/* Smart Scheduler */}
+      <SmartScheduler
+        open={smartSchedulerOpen}
+        onOpenChange={setSmartSchedulerOpen}
+        items={items}
+        onAcceptBlock={async (itemId, startTime) => {
+          const item = items.find(i => i.id === itemId);
+          if (!item || item.type !== 'task') return;
+          // Update the task's deadline to the suggested start time
+          const updatedItem = { ...item, deadline: new Date(startTime) } as Task;
+          await updateItem(updatedItem);
+        }}
       />
 
       {/* Stats Items Drawer */}
