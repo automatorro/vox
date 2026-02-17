@@ -416,12 +416,12 @@ OUTPUT: JSON with time_blocks array
 ### FAZA 5: Templates și Rutine
 | Task | Status | Data Completare | Note |
 |------|--------|-----------------|------|
-| Creare tabel `templates` | [ ] | - | - |
-| Hook `useTemplates` | [ ] | - | - |
-| UI creare template | [ ] | - | - |
-| Apply template flow | [ ] | - | Bulk create items |
-| Rutine predefinite | [ ] | - | Morning, Weekly |
-| **MILESTONE COMPLET** | [ ] | - | - |
+| Creare tabel `templates` | [x] | 2026-02-17 | Migration cu RLS, JSONB items |
+| Hook `useTemplates` | [x] | 2026-02-17 | CRUD + predefined templates |
+| UI creare template | [x] | 2026-02-17 | TemplatesDrawer cu create flow |
+| Apply template flow | [x] | 2026-02-17 | Bulk create items din template |
+| Rutine predefinite | [x] | 2026-02-17 | Morning, Weekly Review, Deep Work |
+| **MILESTONE COMPLET** | [x] | 2026-02-17 | Faza 5 finalizată |
 
 ---
 
