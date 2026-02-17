@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -23,6 +23,7 @@ import { ConflictResolutionModal, ConflictPair } from "@/components/ConflictReso
 import { OverloadResolutionModal, OverloadedDay } from "@/components/OverloadResolutionModal";
 import { FocusMode } from "@/components/FocusMode";
 import { SmartScheduler } from "@/components/SmartScheduler";
+import { TemplatesDrawer } from "@/components/TemplatesDrawer";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -60,6 +61,7 @@ const Index = () => {
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
   const [smartSchedulerOpen, setSmartSchedulerOpen] = useState(false);
+  const [templatesDrawerOpen, setTemplatesDrawerOpen] = useState(false);
   const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
   const [statsDrawerType, setStatsDrawerType] = useState<StatType>('tasks');
   const { toast } = useToast();
@@ -407,6 +409,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Planifică</span>
           </Button>
 
+          {/* Templates Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setTemplatesDrawerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <BookTemplate className="h-4 w-4 text-event" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Template</span>
+          </Button>
+
           {/* AI Summary Button */}
           <Button
             variant="ghost"
@@ -651,6 +664,18 @@ const Index = () => {
           // Update the task's deadline to the suggested start time
           const updatedItem = { ...item, deadline: new Date(startTime) } as Task;
           await updateItem(updatedItem);
+        }}
+      />
+
+      {/* Templates Drawer */}
+      <TemplatesDrawer
+        open={templatesDrawerOpen}
+        onOpenChange={setTemplatesDrawerOpen}
+        userId={user?.id}
+        onApplyTemplate={async (templateItems) => {
+          for (const item of templateItems) {
+            await createItem(item);
+          }
         }}
       />
 
