@@ -30,6 +30,8 @@ export interface Event extends RecurrenceFields {
   duration: number; // in minutes
   synced: boolean;
   googleId?: string; // Google Calendar event ID for synced events
+  priority?: Priority;
+  importance?: 'low' | 'high';
   createdAt: Date;
 }
 
@@ -39,6 +41,8 @@ export interface Reminder extends RecurrenceFields {
   title: string;
   time: Date;
   notified: boolean;
+  priority?: Priority;
+  importance?: 'low' | 'high';
   createdAt: Date;
 }
 

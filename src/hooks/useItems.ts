@@ -68,6 +68,8 @@ const dbItemToItem = (dbItem: DbItem): Item => {
       duration: dbItem.duration ?? 60,
       synced: dbItem.synced ?? false,
       googleId: dbItem.google_id ?? undefined,
+      priority: dbItem.priority ?? undefined,
+      importance: dbItem.importance ?? undefined,
     } as Event;
   }
 
@@ -77,6 +79,8 @@ const dbItemToItem = (dbItem: DbItem): Item => {
     title: dbItem.title,
     time: dbItem.time ? new Date(dbItem.time) : new Date(),
     notified: dbItem.notified ?? false,
+    priority: dbItem.priority ?? undefined,
+    importance: dbItem.importance ?? undefined,
   } as Reminder;
 };
 
@@ -246,10 +250,14 @@ export const useItems = (userId: string | undefined) => {
       dbData.duration = event.duration;
       dbData.synced = event.synced;
       dbData.google_id = event.googleId ?? null;
+      dbData.priority = event.priority ?? null;
+      dbData.importance = event.importance ?? null;
     } else {
       const reminder = item as Reminder;
       dbData.time = reminder.time?.toISOString() ?? null;
       dbData.notified = reminder.notified;
+      dbData.priority = reminder.priority ?? null;
+      dbData.importance = reminder.importance ?? null;
     }
 
     const { error } = await supabase

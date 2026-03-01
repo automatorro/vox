@@ -213,7 +213,19 @@ const getItemPriorityInfo = (item: Item): { isUrgent: boolean; isImportant: bool
             isImportant: task.importance === 'high'
         };
     }
-    // For events and reminders, default to urgent if today/soon, important by default
+    
+    // For events and reminders, use stored priority/importance if available (from matrix drag)
+    const storedPriority = (item as Event | Reminder).priority;
+    const storedImportance = (item as Event | Reminder).importance;
+    
+    if (storedPriority || storedImportance) {
+        return {
+            isUrgent: storedPriority ? ['high', 'critical'].includes(storedPriority) : false,
+            isImportant: storedImportance === 'high'
+        };
+    }
+    
+    // Fallback: date-based logic for items not yet classified
     const itemDate = item.type === 'event' 
         ? new Date((item as Event).startTime) 
         : new Date((item as Reminder).time);
@@ -221,8 +233,8 @@ const getItemPriorityInfo = (item: Item): { isUrgent: boolean; isImportant: bool
     const daysDiff = Math.ceil((itemDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
     return {
-        isUrgent: daysDiff <= 1, // Today or tomorrow = urgent
-        isImportant: true // Events and reminders are important by default
+        isUrgent: daysDiff <= 1,
+        isImportant: true
     };
 };
 
@@ -269,14 +281,6 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
         }
     };
 
-    const applyUpdatesToItem = (item: Item, updates: { priority: Priority; importance: 'low' | 'high' }): Item => {
-        if (item.type === 'task') {
-            return { ...item, ...updates } as Task;
-        }
-        // For events/reminders, we store the classification conceptually
-        // They don't have priority/importance fields, but we can still move them
-        return item;
-    };
 
     const handleDrop = async (e: React.DragEvent, targetVariant: 'do' | 'schedule' | 'delegate' | 'dolast') => {
         e.preventDefault();
@@ -284,10 +288,9 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
         const item = items.find(i => i.id === itemId);
         if (!item) return;
 
-        if (item.type === 'task') {
-            const updates = getUpdatesForVariant(targetVariant);
-            await onUpdateItem({ ...item, ...updates } as Task);
-        }
+        const updates = getUpdatesForVariant(targetVariant);
+        const updatedItem = { ...item, ...updates } as Item;
+        await onUpdateItem(updatedItem);
         
         // Trigger success animation and sound
         playSuccessSound();
@@ -299,10 +302,9 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
         const item = items.find(i => i.id === itemId);
         if (!item) return;
 
-        if (item.type === 'task') {
-            const updates = getUpdatesForVariant(targetVariant);
-            await onUpdateItem({ ...item, ...updates } as Task);
-        }
+        const updates = getUpdatesForVariant(targetVariant);
+        const updatedItem = { ...item, ...updates } as Item;
+        await onUpdateItem(updatedItem);
         
         // Trigger success animation and sound
         playSuccessSound();
