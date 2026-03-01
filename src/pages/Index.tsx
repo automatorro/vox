@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -22,6 +22,7 @@ import { EisenhowerMatrix } from "@/components/EisenhowerMatrix";
 import { ConflictResolutionModal, ConflictPair } from "@/components/ConflictResolutionModal";
 import { OverloadResolutionModal, OverloadedDay } from "@/components/OverloadResolutionModal";
 import { FocusMode } from "@/components/FocusMode";
+import { AutoPilotMode } from "@/components/AutoPilotMode";
 import { SmartScheduler } from "@/components/SmartScheduler";
 import { TemplatesDrawer } from "@/components/TemplatesDrawer";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
@@ -60,6 +61,7 @@ const Index = () => {
   const [activeOverloads, setActiveOverloads] = useState<OverloadedDay[]>([]);
   const [voiceParseResult, setVoiceParseResult] = useState<VoiceParseResult | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
+  const [autoPilotOpen, setAutoPilotOpen] = useState(false);
   const [smartSchedulerOpen, setSmartSchedulerOpen] = useState(false);
   const [templatesDrawerOpen, setTemplatesDrawerOpen] = useState(false);
   const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
@@ -387,6 +389,17 @@ const Index = () => {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Auto-Pilot Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAutoPilotOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <Zap className="h-4 w-4 text-primary" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Pilot</span>
+          </Button>
+
           {/* Focus Mode Button */}
           <Button
             variant="ghost"
@@ -643,6 +656,14 @@ const Index = () => {
           setEditDrawerOpen(true);
           setOverloadModalOpen(false);
         }}
+      />
+
+      {/* Auto-Pilot Mode */}
+      <AutoPilotMode
+        open={autoPilotOpen}
+        onOpenChange={setAutoPilotOpen}
+        tasks={allTasks}
+        onCompleteTask={handleCompleteTask}
       />
 
       {/* Focus Mode */}
