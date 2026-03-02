@@ -428,12 +428,12 @@ OUTPUT: JSON with time_blocks array
 ### FAZA 6: Tags și Organizare Avansată
 | Task | Status | Data Completare | Note |
 |------|--------|-----------------|------|
-| Creare tabele `tags`, `item_tags` | [ ] | - | - |
-| Hook `useTags` | [ ] | - | - |
-| Multi-select pe forms | [ ] | - | - |
-| Filtrare combinată | [ ] | - | - |
-| View by Tag | [ ] | - | - |
-| **MILESTONE COMPLET** | [ ] | - | - |
+| Creare tabele `tags`, `item_tags` | [x] | 2026-03-02 | Migration cu RLS complet |
+| Hook `useTags` | [x] | 2026-03-02 | CRUD tags + item_tags associations |
+| Multi-select pe forms | [x] | 2026-03-02 | TagSelect component în Create/Edit drawers |
+| Filtrare combinată | [x] | 2026-03-02 | TagFilter component pe dashboard |
+| View by Tag | [ ] | - | Opțional - viitor |
+| **MILESTONE COMPLET** | [~] | - | Core funcțional, lipsește View by Tag |
 
 ---
 

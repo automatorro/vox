@@ -27,8 +27,10 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CategorySelect } from "@/components/CategorySelect";
+import { TagSelect } from "@/components/TagSelect";
 import { SubtaskList } from "@/components/SubtaskList";
 import { Category } from "@/hooks/useCategories";
+import { Tag } from "@/hooks/useTags";
 import { Task, Event, Reminder, Priority, Item, RecurrenceType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -36,9 +38,12 @@ interface EditItemDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: Item | null;
-  onUpdateItem: (item: Item) => void;
+  onUpdateItem: (item: Item, tagIds?: string[]) => void;
   categories: Category[];
   onCreateCategory: (name: string, color: string) => Promise<Category | null>;
+  tags: Tag[];
+  onCreateTag: (name: string, color: string) => Promise<Tag | null>;
+  getItemTagIds: (itemId: string) => Promise<string[]>;
 }
 
 const typeConfig = {
@@ -65,7 +70,7 @@ const typeConfig = {
   },
 };
 
-export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categories, onCreateCategory }: EditItemDrawerProps) => {
+export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categories, onCreateCategory, tags, onCreateTag, getItemTagIds }: EditItemDrawerProps) => {
   // Common fields
   const [title, setTitle] = useState('');
   
@@ -89,6 +94,9 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categor
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>(undefined);
 
+  // Tags
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   // Populate form when item changes
   useEffect(() => {
     if (!item) return;
@@ -98,6 +106,9 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categor
     // Recurrence (common to all types)
     setRecurrenceType((item.recurrenceType as RecurrenceType) || 'none');
     setRecurrenceEndDate(item.recurrenceEndDate ? new Date(item.recurrenceEndDate) : undefined);
+
+    // Load tags
+    getItemTagIds(item.id).then(ids => setSelectedTagIds(ids));
 
     if (item.type === 'task') {
       const task = item as Task;
@@ -173,7 +184,7 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categor
         return;
     }
 
-    onUpdateItem(updatedItem);
+    onUpdateItem(updatedItem, selectedTagIds);
     onOpenChange(false);
   };
 
@@ -429,6 +440,16 @@ export const EditItemDrawer = ({ open, onOpenChange, item, onUpdateItem, categor
               </div>
             </>
           )}
+
+          {/* Tags Section */}
+          <div className="pt-2 border-t border-border">
+            <TagSelect
+              tags={tags}
+              selectedTagIds={selectedTagIds}
+              onSelectionChange={setSelectedTagIds}
+              onCreateTag={onCreateTag}
+            />
+          </div>
 
           {/* Recurrence Section - For all types */}
           <div className="space-y-3 pt-2 border-t border-border">
