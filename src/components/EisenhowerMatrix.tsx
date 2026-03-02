@@ -95,10 +95,16 @@ const Quadrant = ({
             )}
             onDragOver={(e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 setIsDragOver(true);
             }}
-            onDragLeave={() => setIsDragOver(false)}
+            onDragLeave={(e) => {
+                e.stopPropagation();
+                setIsDragOver(false);
+            }}
             onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 setIsDragOver(false);
                 onDrop(e, variant);
             }}
@@ -120,7 +126,11 @@ const Quadrant = ({
                                 key={item.id}
                                 data-touch-drag-root
                                 draggable
-                                onDragStart={(e) => e.dataTransfer.setData('itemId', item.id)}
+                                onDragStart={(e) => {
+                                    e.stopPropagation();
+                                    e.dataTransfer.setData('text/plain', item.id);
+                                    e.dataTransfer.effectAllowed = 'move';
+                                }}
                                 className={cn(
                                     "p-3 rounded-lg border bg-background/80 hover:bg-background shadow-sm cursor-move transition-all active:scale-95 group relative",
                                     recentlyDroppedId === item.id && "animate-drop-success"
@@ -154,41 +164,49 @@ const Quadrant = ({
                                         </div>
                                     </div>
                                     
-                                    {/* Actions Menu */}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <MoreVertical className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end" className="bg-popover">
-                                            <DropdownMenuItem 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onEditItem?.(item);
-                                                }} 
-                                                className="gap-2 cursor-pointer"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                                Editează
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    onDeleteItem?.(item.id);
-                                                }} 
-                                                className="gap-2 cursor-pointer text-destructive focus:text-destructive"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                                Șterge
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                    {/* Actions Menu - prevent drag interference */}
+                                    <div
+                                        draggable={false}
+                                        onDragStart={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                    >
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex-shrink-0"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <MoreVertical className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-popover z-50">
+                                                <DropdownMenuItem 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        onEditItem?.(item);
+                                                    }} 
+                                                    className="gap-2 cursor-pointer"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                    Editează
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        onDeleteItem?.(item.id);
+                                                    }} 
+                                                    className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                    Șterge
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -251,8 +269,6 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
         const q4: Item[] = []; // Not Urgent & Not Important - Do Last
 
         items.forEach(item => {
-            // Tasks marked as completed shouldn't appear in the matrix
-            // (matrix is for prioritizing what still needs attention)
             if (item.type === 'task' && (item as Task).completed) {
                 return;
             }
@@ -281,21 +297,31 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
         }
     };
 
-
     const handleDrop = async (e: React.DragEvent, targetVariant: 'do' | 'schedule' | 'delegate' | 'dolast') => {
         e.preventDefault();
-        const itemId = e.dataTransfer.getData('itemId');
+        e.stopPropagation();
+        const itemId = e.dataTransfer.getData('text/plain');
+        if (!itemId) return;
+
         const item = items.find(i => i.id === itemId);
         if (!item) return;
 
         const updates = getUpdatesForVariant(targetVariant);
         const updatedItem = { ...item, ...updates } as Item;
-        await onUpdateItem(updatedItem);
-        
-        // Trigger success animation and sound
-        playSuccessSound();
-        setRecentlyDroppedId(itemId);
-        setTimeout(() => setRecentlyDroppedId(null), 500);
+
+        try {
+            const success = await onUpdateItem(updatedItem);
+            if (success) {
+                playSuccessSound();
+                setRecentlyDroppedId(itemId);
+                setTimeout(() => setRecentlyDroppedId(null), 500);
+            } else {
+                toast({ title: "Eroare", description: "Nu s-a putut muta elementul.", variant: "destructive" });
+            }
+        } catch (error) {
+            console.error('Drop error:', error);
+            toast({ title: "Eroare", description: "Nu s-a putut muta elementul.", variant: "destructive" });
+        }
     };
 
     const handleTouchDrop = useCallback(async (itemId: string, targetVariant: 'do' | 'schedule' | 'delegate' | 'dolast') => {
@@ -304,12 +330,17 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
 
         const updates = getUpdatesForVariant(targetVariant);
         const updatedItem = { ...item, ...updates } as Item;
-        await onUpdateItem(updatedItem);
-        
-        // Trigger success animation and sound
-        playSuccessSound();
-        setRecentlyDroppedId(itemId);
-        setTimeout(() => setRecentlyDroppedId(null), 500);
+
+        try {
+            const success = await onUpdateItem(updatedItem);
+            if (success) {
+                playSuccessSound();
+                setRecentlyDroppedId(itemId);
+                setTimeout(() => setRecentlyDroppedId(null), 500);
+            }
+        } catch (error) {
+            console.error('Touch drop error:', error);
+        }
     }, [items, onUpdateItem, playSuccessSound]);
 
     // Touch drag and drop
@@ -356,7 +387,7 @@ export const EisenhowerMatrix = ({ items, onUpdateItem, onEditItem, onDeleteItem
                 for (const update of data.updates) {
                     const task = tasks.find(t => t.id === update.id);
                     if (task) {
-                        onUpdateItem({
+                        await onUpdateItem({
                             ...task,
                             priority: update.priority,
                             importance: update.importance
