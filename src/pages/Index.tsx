@@ -25,6 +25,7 @@ import { FocusMode } from "@/components/FocusMode";
 import { AutoPilotMode } from "@/components/AutoPilotMode";
 import { SmartScheduler } from "@/components/SmartScheduler";
 import { TemplatesDrawer } from "@/components/TemplatesDrawer";
+import { TagFilter } from "@/components/TagFilter";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -33,6 +34,7 @@ import { useGoogleCalendar } from "@/hooks/useGoogleCalendar";
 import { useAuth } from "@/hooks/useAuth";
 import { useItems } from "@/hooks/useItems";
 import { useCategories } from "@/hooks/useCategories";
+import { useTags } from "@/hooks/useTags";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +72,8 @@ const Index = () => {
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
   const { categories, createCategory } = useCategories(user?.id);
+  const { tags, createTag, getItemTagIds, setItemTags, getItemsTagIds } = useTags(user?.id);
+  const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
 
   // Google Calendar integration
   const handleEventsImported = (importedEvents: Event[]) => {
@@ -202,7 +206,7 @@ const Index = () => {
     setViewMode('dashboard');
   };
 
-  const handleCreateItem = async (newItem: Item) => {
+  const handleCreateItem = async (newItem: Item, tagIds?: string[]) => {
     // If it's an event and Google Calendar is connected, sync it
     let googleId: string | undefined;
     if (newItem.type === 'event' && isGoogleConnected) {
@@ -222,6 +226,11 @@ const Index = () => {
     const created = await createItem(itemToCreate);
 
     if (created) {
+      // Save tags if provided
+      if (tagIds && tagIds.length > 0) {
+        await setItemTags(created.id, tagIds);
+      }
+
       const typeLabels = {
         task: 'Task',
         event: 'Eveniment',
@@ -240,10 +249,15 @@ const Index = () => {
     setEditDrawerOpen(true);
   };
 
-  const handleUpdateItem = async (updatedItem: Item): Promise<boolean> => {
+  const handleUpdateItem = async (updatedItem: Item, tagIds?: string[]): Promise<boolean> => {
     const success = await updateItem(updatedItem);
 
     if (success) {
+      // Save tags if provided
+      if (tagIds) {
+        await setItemTags(updatedItem.id, tagIds);
+      }
+
       const typeLabels = {
         task: 'Task',
         event: 'Eveniment',
@@ -475,11 +489,27 @@ const Index = () => {
             </section>
 
             {/* Category Filter */}
-            <section className="mb-3 sm:mb-4">
+            <section className="mb-2 sm:mb-3">
               <CategoryFilter
                 categories={categories}
                 selectedCategoryId={filterCategoryId}
                 onSelect={setFilterCategoryId}
+              />
+            </section>
+
+            {/* Tag Filter */}
+            <section className="mb-3 sm:mb-4">
+              <TagFilter
+                tags={tags}
+                selectedTagIds={filterTagIds}
+                onToggle={(tagId) => {
+                  setFilterTagIds(prev =>
+                    prev.includes(tagId)
+                      ? prev.filter(id => id !== tagId)
+                      : [...prev, tagId]
+                  );
+                }}
+                onClear={() => setFilterTagIds([])}
               />
             </section>
 
@@ -581,6 +611,8 @@ const Index = () => {
         onCreateItem={handleCreateItem}
         categories={categories}
         onCreateCategory={createCategory}
+        tags={tags}
+        onCreateTag={createTag}
       />
 
       {/* Edit Item Drawer */}
@@ -591,6 +623,9 @@ const Index = () => {
         onUpdateItem={handleUpdateItem}
         categories={categories}
         onCreateCategory={createCategory}
+        tags={tags}
+        onCreateTag={createTag}
+        getItemTagIds={getItemTagIds}
       />
 
       {/* Notification Settings */}

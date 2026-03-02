@@ -27,7 +27,9 @@ import {
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CategorySelect } from "@/components/CategorySelect";
+import { TagSelect } from "@/components/TagSelect";
 import { Category } from "@/hooks/useCategories";
+import { Tag } from "@/hooks/useTags";
 import { Task, Event, Reminder, Priority, Item, RecurrenceType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -36,15 +38,11 @@ type ItemType = 'task' | 'event' | 'reminder';
 interface CreateItemDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreateItem: (item: Item) => void;
+  onCreateItem: (item: Item, tagIds?: string[]) => void;
   categories: Category[];
   onCreateCategory: (name: string, color: string) => Promise<Category | null>;
-}
-
-interface CreateItemDrawerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreateItem: (item: Item) => void;
+  tags: Tag[];
+  onCreateTag: (name: string, color: string) => Promise<Tag | null>;
 }
 
 const typeConfig = {
@@ -71,7 +69,7 @@ const typeConfig = {
   },
 };
 
-export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories, onCreateCategory }: CreateItemDrawerProps) => {
+export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories, onCreateCategory, tags, onCreateTag }: CreateItemDrawerProps) => {
   const [selectedType, setSelectedType] = useState<ItemType>('task');
   
   // Common fields
@@ -97,6 +95,9 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>(undefined);
 
+  // Tags
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
   const resetForm = () => {
     setTitle('');
     setDescription('');
@@ -111,6 +112,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
     setReminderTime('09:00');
     setRecurrenceType('none');
     setRecurrenceEndDate(undefined);
+    setSelectedTagIds([]);
   };
 
   const handleSubmit = () => {
@@ -175,7 +177,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
         break;
     }
 
-    onCreateItem(newItem);
+    onCreateItem(newItem, selectedTagIds.length > 0 ? selectedTagIds : undefined);
     resetForm();
     onOpenChange(false);
   };
@@ -433,6 +435,16 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
               </div>
             </>
           )}
+
+          {/* Tags Section */}
+          <div className="pt-2 border-t border-border">
+            <TagSelect
+              tags={tags}
+              selectedTagIds={selectedTagIds}
+              onSelectionChange={setSelectedTagIds}
+              onCreateTag={onCreateTag}
+            />
+          </div>
 
           {/* Recurrence Section - For all types */}
           <div className="space-y-3 pt-2 border-t border-border">
