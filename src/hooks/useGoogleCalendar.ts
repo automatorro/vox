@@ -24,8 +24,20 @@ export const useGoogleCalendar = (onEventsImported: (events: Event[]) => void) =
   useEffect(() => {
     const fetchClientId = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke('google-auth-config');
-        if (!error && data?.clientId) {
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const res = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/google-auth-config`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': anonKey,
+            },
+          }
+        );
+        const data = await res.json();
+        if (data?.clientId) {
           setGoogleClientId(data.clientId);
         }
       } catch (e) {
