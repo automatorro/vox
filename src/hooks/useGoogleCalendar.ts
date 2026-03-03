@@ -3,7 +3,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Event } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const SCOPES = 'https://www.googleapis.com/auth/calendar';
 
 interface GoogleCalendarEvent {
@@ -18,7 +17,23 @@ export const useGoogleCalendar = (onEventsImported: (events: Event[]) => void) =
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [googleClientId, setGoogleClientId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Fetch Google Client ID from edge function
+  useEffect(() => {
+    const fetchClientId = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('google-auth-config');
+        if (!error && data?.clientId) {
+          setGoogleClientId(data.clientId);
+        }
+      } catch (e) {
+        console.error('Failed to fetch Google Client ID:', e);
+      }
+    };
+    fetchClientId();
+  }, []);
 
   // Check for stored token on mount
   useEffect(() => {
@@ -39,7 +54,7 @@ export const useGoogleCalendar = (onEventsImported: (events: Event[]) => void) =
   }, []);
 
   const connect = useCallback(async () => {
-    if (!GOOGLE_CLIENT_ID) {
+    if (!googleClientId) {
       toast({
         title: "Configurare necesară",
         description: "Google Client ID nu este configurat. Adaugă VITE_GOOGLE_CLIENT_ID în setări.",
@@ -54,7 +69,7 @@ export const useGoogleCalendar = (onEventsImported: (events: Event[]) => void) =
       // Create OAuth URL
       const redirectUri = `${window.location.origin}/`;
       const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-      authUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID);
+      authUrl.searchParams.set('client_id', googleClientId);
       authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('response_type', 'token');
       authUrl.searchParams.set('scope', SCOPES);
@@ -134,7 +149,7 @@ export const useGoogleCalendar = (onEventsImported: (events: Event[]) => void) =
       });
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, googleClientId]);
 
   const disconnect = useCallback(() => {
     localStorage.removeItem('google_calendar_token');
