@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -26,6 +26,7 @@ import { AutoPilotMode } from "@/components/AutoPilotMode";
 import { SmartScheduler } from "@/components/SmartScheduler";
 import { TemplatesDrawer } from "@/components/TemplatesDrawer";
 import { TagFilter } from "@/components/TagFilter";
+import { ScanNoteModal } from "@/components/ScanNoteModal";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -68,6 +69,7 @@ const Index = () => {
   const [templatesDrawerOpen, setTemplatesDrawerOpen] = useState(false);
   const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
   const [statsDrawerType, setStatsDrawerType] = useState<StatType>('tasks');
+  const [scanNoteOpen, setScanNoteOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -563,6 +565,17 @@ const Index = () => {
       {/* Fixed Bottom Action Bar */}
       <div className="flex-shrink-0 bg-background/80 backdrop-blur-lg border-t border-border px-4 py-3 safe-area-pb">
         <div className="flex items-center justify-center gap-4">
+          {/* Scan Note Button */}
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-12 px-4 rounded-full gap-2"
+            onClick={() => setScanNoteOpen(true)}
+          >
+            <ScanLine className="h-5 w-5" />
+            <span className="font-medium hidden sm:inline">Scanează</span>
+          </Button>
+
           {/* Add Button */}
           <Button
             variant="default"
@@ -730,6 +743,17 @@ const Index = () => {
         userId={user?.id}
         onApplyTemplate={async (templateItems) => {
           for (const item of templateItems) {
+            await createItem(item);
+          }
+        }}
+      />
+
+      {/* Scan Note Modal */}
+      <ScanNoteModal
+        open={scanNoteOpen}
+        onOpenChange={setScanNoteOpen}
+        onCreateItems={async (newItems) => {
+          for (const item of newItems) {
             await createItem(item);
           }
         }}
