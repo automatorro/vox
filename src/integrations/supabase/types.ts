@@ -137,6 +137,7 @@ export type Database = {
         Row: {
           category_id: string | null
           completed: boolean | null
+          context_type: string | null
           created_at: string
           deadline: string | null
           description: string | null
@@ -144,6 +145,7 @@ export type Database = {
           google_id: string | null
           id: string
           importance: string | null
+          location_id: string | null
           notified: boolean | null
           parent_item_id: string | null
           priority: Database["public"]["Enums"]["priority_level"] | null
@@ -161,6 +163,7 @@ export type Database = {
         Insert: {
           category_id?: string | null
           completed?: boolean | null
+          context_type?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
@@ -168,6 +171,7 @@ export type Database = {
           google_id?: string | null
           id?: string
           importance?: string | null
+          location_id?: string | null
           notified?: boolean | null
           parent_item_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"] | null
@@ -185,6 +189,7 @@ export type Database = {
         Update: {
           category_id?: string | null
           completed?: boolean | null
+          context_type?: string | null
           created_at?: string
           deadline?: string | null
           description?: string | null
@@ -192,6 +197,7 @@ export type Database = {
           google_id?: string | null
           id?: string
           importance?: string | null
+          location_id?: string | null
           notified?: boolean | null
           parent_item_id?: string | null
           priority?: Database["public"]["Enums"]["priority_level"] | null
@@ -212,6 +218,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "items_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "saved_locations"
             referencedColumns: ["id"]
           },
           {
@@ -345,6 +358,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      saved_locations: {
+        Row: {
+          address: string | null
+          created_at: string
+          icon: string
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          radius_meters: number
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          latitude: number
+          longitude: number
+          name: string
+          radius_meters?: number
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          icon?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius_meters?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_locations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subtasks: {
         Row: {

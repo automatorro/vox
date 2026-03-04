@@ -6,6 +6,8 @@ interface RecurrenceFields {
   recurrenceEndDate?: Date;
   parentItemId?: string;
   sortOrder?: number;
+  locationId?: string;
+  contextType?: string;
 }
 
 export interface Task extends RecurrenceFields {

@@ -30,6 +30,8 @@ interface DbItem {
   recurrence_end_date: string | null;
   parent_item_id: string | null;
   sort_order: number | null;
+  location_id: string | null;
+  context_type: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -42,6 +44,8 @@ const dbItemToItem = (dbItem: DbItem): Item => {
     recurrenceEndDate: dbItem.recurrence_end_date ? new Date(dbItem.recurrence_end_date) : undefined,
     parentItemId: dbItem.parent_item_id ?? undefined,
     sortOrder: dbItem.sort_order ?? 0,
+    locationId: dbItem.location_id ?? undefined,
+    contextType: dbItem.context_type ?? undefined,
   };
 
   if (dbItem.type === 'task') {
@@ -177,6 +181,8 @@ export const useItems = (userId: string | undefined) => {
       recurrence_end_date: item.recurrenceEndDate?.toISOString() ?? null,
       parent_item_id: item.parentItemId ?? null,
       sort_order: item.sortOrder ?? 0,
+      location_id: item.locationId ?? null,
+      context_type: item.contextType ?? null,
     };
 
     if (item.type === 'task') {
@@ -233,6 +239,8 @@ export const useItems = (userId: string | undefined) => {
       recurrence_type: item.recurrenceType ?? 'none',
       recurrence_end_date: item.recurrenceEndDate?.toISOString() ?? null,
       sort_order: item.sortOrder ?? 0,
+      location_id: item.locationId ?? null,
+      context_type: item.contextType ?? null,
     };
 
     if (item.type === 'task') {
