@@ -1,6 +1,7 @@
-import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen, Repeat, ListChecks } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, Bell, Circle, Pencil, Trash2, MoreVertical, Timer, FolderOpen, Repeat, ListChecks, MapPin } from "lucide-react";
 import { Task, Event, Reminder, Priority, RecurrenceType } from "@/types";
 import { Category } from "@/hooks/useCategories";
+import { SavedLocation } from "@/hooks/useLocations";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
@@ -16,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 interface ItemCardProps {
   item: Task | Event | Reminder;
   categories?: Category[];
+  locations?: SavedLocation[];
   subtaskProgress?: { completed: number; total: number };
   onComplete?: (id: string) => void;
   onEdit?: (item: Task | Event | Reminder) => void;
@@ -37,7 +39,7 @@ const recurrenceLabels: Record<RecurrenceType, string> = {
   yearly: 'Anual',
 };
 
-export const ItemCard = ({ item, categories, subtaskProgress, onComplete, onEdit, onDelete }: ItemCardProps) => {
+export const ItemCard = ({ item, categories, locations, subtaskProgress, onComplete, onEdit, onDelete }: ItemCardProps) => {
   const isTask = item.type === 'task';
   const isEvent = item.type === 'event';
   const isReminder = item.type === 'reminder';
@@ -46,7 +48,9 @@ export const ItemCard = ({ item, categories, subtaskProgress, onComplete, onEdit
     ? categories?.find(c => c.id === (item as Task).categoryId)
     : null;
 
-  // Calculate subtask progress
+  const itemLocation = item.locationId
+    ? locations?.find(l => l.id === item.locationId)
+    : null;
   const hasSubtasks = subtaskProgress && subtaskProgress.total > 0;
   const subtaskProgressPercent = hasSubtasks 
     ? Math.round((subtaskProgress.completed / subtaskProgress.total) * 100) 
@@ -178,6 +182,14 @@ export const ItemCard = ({ item, categories, subtaskProgress, onComplete, onEdit
             <span className="text-xs text-primary/70 flex items-center gap-1">
               <Repeat className="h-3 w-3" />
               {recurrenceLabels[item.recurrenceType]}
+            </span>
+          )}
+
+          {/* Location badge */}
+          {itemLocation && (
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <span>{itemLocation.icon}</span>
+              {itemLocation.name}
             </span>
           )}
         </div>

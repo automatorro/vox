@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -27,6 +27,7 @@ import { SmartScheduler } from "@/components/SmartScheduler";
 import { TemplatesDrawer } from "@/components/TemplatesDrawer";
 import { TagFilter } from "@/components/TagFilter";
 import { ScanNoteModal } from "@/components/ScanNoteModal";
+import { LocationManager } from "@/components/LocationManager";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -36,6 +37,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useItems } from "@/hooks/useItems";
 import { useCategories } from "@/hooks/useCategories";
 import { useTags } from "@/hooks/useTags";
+import { useLocations } from "@/hooks/useLocations";
+import { useProximityReminders } from "@/hooks/useProximityReminders";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -76,6 +79,33 @@ const Index = () => {
   const { categories, createCategory } = useCategories(user?.id);
   const { tags, createTag, getItemTagIds, setItemTags, getItemsTagIds } = useTags(user?.id);
   const [filterTagIds, setFilterTagIds] = useState<string[]>([]);
+  const [locationManagerOpen, setLocationManagerOpen] = useState(false);
+
+  // Locations
+  const {
+    locations,
+    createLocation,
+    updateLocation,
+    deleteLocation,
+    currentPosition,
+    startWatching,
+    getCurrentPosition,
+  } = useLocations(user?.id);
+
+  // Start watching position for proximity reminders
+  useEffect(() => {
+    if (locations.length > 0) {
+      startWatching();
+    }
+  }, [locations.length]);
+
+  // Proximity reminders
+  useProximityReminders({
+    items,
+    locations,
+    currentPosition,
+    enabled: locations.length > 0 && notificationSettings.pushEnabled,
+  });
 
   // Google Calendar integration
   const handleEventsImported = (importedEvents: Event[]) => {
@@ -449,6 +479,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Template</span>
           </Button>
 
+          {/* Locations Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocationManagerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <MapPin className="h-4 w-4 text-reminder" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Locații</span>
+          </Button>
+
           {/* AI Summary Button */}
           <Button
             variant="ghost"
@@ -626,6 +667,7 @@ const Index = () => {
         onCreateCategory={createCategory}
         tags={tags}
         onCreateTag={createTag}
+        locations={locations}
       />
 
       {/* Edit Item Drawer */}
@@ -639,6 +681,7 @@ const Index = () => {
         tags={tags}
         onCreateTag={createTag}
         getItemTagIds={getItemTagIds}
+        locations={locations}
       />
 
       {/* Notification Settings */}
@@ -769,6 +812,17 @@ const Index = () => {
         onComplete={handleCompleteTask}
         onEdit={handleEditItem}
         onDelete={handleDeleteItem}
+      />
+
+      {/* Location Manager */}
+      <LocationManager
+        open={locationManagerOpen}
+        onOpenChange={setLocationManagerOpen}
+        locations={locations}
+        onCreateLocation={createLocation}
+        onUpdateLocation={updateLocation}
+        onDeleteLocation={deleteLocation}
+        getCurrentPosition={getCurrentPosition}
       />
     </div>
   );

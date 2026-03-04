@@ -28,8 +28,10 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { CategorySelect } from "@/components/CategorySelect";
 import { TagSelect } from "@/components/TagSelect";
+import { LocationSelect } from "@/components/LocationSelect";
 import { Category } from "@/hooks/useCategories";
 import { Tag } from "@/hooks/useTags";
+import { SavedLocation } from "@/hooks/useLocations";
 import { Task, Event, Reminder, Priority, Item, RecurrenceType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +45,7 @@ interface CreateItemDrawerProps {
   onCreateCategory: (name: string, color: string) => Promise<Category | null>;
   tags: Tag[];
   onCreateTag: (name: string, color: string) => Promise<Tag | null>;
+  locations: SavedLocation[];
 }
 
 const typeConfig = {
@@ -69,7 +72,7 @@ const typeConfig = {
   },
 };
 
-export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories, onCreateCategory, tags, onCreateTag }: CreateItemDrawerProps) => {
+export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories, onCreateCategory, tags, onCreateTag, locations }: CreateItemDrawerProps) => {
   const [selectedType, setSelectedType] = useState<ItemType>('task');
   
   // Common fields
@@ -95,8 +98,8 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date | undefined>(undefined);
 
-  // Tags
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [locationId, setLocationId] = useState<string | null>(null);
 
   const resetForm = () => {
     setTitle('');
@@ -113,6 +116,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
     setRecurrenceType('none');
     setRecurrenceEndDate(undefined);
     setSelectedTagIds([]);
+    setLocationId(null);
   };
 
   const handleSubmit = () => {
@@ -138,6 +142,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
           createdAt,
           recurrenceType,
           recurrenceEndDate: recurrenceType !== 'none' ? recurrenceEndDate : undefined,
+          locationId: locationId || undefined,
         } as Task;
         break;
       
@@ -156,6 +161,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
           createdAt,
           recurrenceType,
           recurrenceEndDate: recurrenceType !== 'none' ? recurrenceEndDate : undefined,
+          locationId: locationId || undefined,
         } as Event;
         break;
       
@@ -173,6 +179,7 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
           createdAt,
           recurrenceType,
           recurrenceEndDate: recurrenceType !== 'none' ? recurrenceEndDate : undefined,
+          locationId: locationId || undefined,
         } as Reminder;
         break;
     }
@@ -435,6 +442,15 @@ export const CreateItemDrawer = ({ open, onOpenChange, onCreateItem, categories,
               </div>
             </>
           )}
+
+          {/* Location Section */}
+          <div className="pt-2 border-t border-border">
+            <LocationSelect
+              locations={locations}
+              selectedLocationId={locationId}
+              onSelect={setLocationId}
+            />
+          </div>
 
           {/* Tags Section */}
           <div className="pt-2 border-t border-border">
