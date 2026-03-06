@@ -840,6 +840,16 @@ const Index = () => {
         onDeleteLocation={deleteLocation}
         getCurrentPosition={getCurrentPosition}
       />
+
+      {/* Habit Tracker */}
+      <HabitTracker
+        open={habitTrackerOpen}
+        onOpenChange={setHabitTrackerOpen}
+        habits={habits}
+        onCreateHabit={createHabit}
+        onToggleCompletion={toggleCompletion}
+        onDeleteHabit={deleteHabit}
+      />
     </div>
   );
 };
