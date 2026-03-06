@@ -97,6 +97,74 @@ export type Database = {
           },
         ]
       }
+      habit_completions: {
+        Row: {
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_date: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          archived: boolean
+          color: string
+          created_at: string
+          frequency: string
+          icon: string
+          id: string
+          name: string
+          target_per_period: number
+          user_id: string
+        }
+        Insert: {
+          archived?: boolean
+          color?: string
+          created_at?: string
+          frequency?: string
+          icon?: string
+          id?: string
+          name: string
+          target_per_period?: number
+          user_id: string
+        }
+        Update: {
+          archived?: boolean
+          color?: string
+          created_at?: string
+          frequency?: string
+          icon?: string
+          id?: string
+          name?: string
+          target_per_period?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       item_tags: {
         Row: {
           created_at: string

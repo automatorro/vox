@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -28,6 +28,7 @@ import { TemplatesDrawer } from "@/components/TemplatesDrawer";
 import { TagFilter } from "@/components/TagFilter";
 import { ScanNoteModal } from "@/components/ScanNoteModal";
 import { LocationManager } from "@/components/LocationManager";
+import { HabitTracker } from "@/components/HabitTracker";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -39,6 +40,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useTags } from "@/hooks/useTags";
 import { useLocations } from "@/hooks/useLocations";
 import { useProximityReminders } from "@/hooks/useProximityReminders";
+import { useHabits } from "@/hooks/useHabits";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +75,7 @@ const Index = () => {
   const [statsDrawerOpen, setStatsDrawerOpen] = useState(false);
   const [statsDrawerType, setStatsDrawerType] = useState<StatType>('tasks');
   const [scanNoteOpen, setScanNoteOpen] = useState(false);
+  const [habitTrackerOpen, setHabitTrackerOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -91,6 +94,9 @@ const Index = () => {
     startWatching,
     getCurrentPosition,
   } = useLocations(user?.id);
+
+  // Habits
+  const { habits, createHabit, toggleCompletion, deleteHabit } = useHabits(user?.id);
 
   // Start watching position for proximity reminders
   useEffect(() => {
@@ -490,7 +496,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Locații</span>
           </Button>
 
-          {/* AI Summary Button */}
+          {/* Habits Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setHabitTrackerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Obiceiuri</span>
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
@@ -823,6 +839,16 @@ const Index = () => {
         onUpdateLocation={updateLocation}
         onDeleteLocation={deleteLocation}
         getCurrentPosition={getCurrentPosition}
+      />
+
+      {/* Habit Tracker */}
+      <HabitTracker
+        open={habitTrackerOpen}
+        onOpenChange={setHabitTrackerOpen}
+        habits={habits}
+        onCreateHabit={createHabit}
+        onToggleCompletion={toggleCompletion}
+        onDeleteHabit={deleteHabit}
       />
     </div>
   );
