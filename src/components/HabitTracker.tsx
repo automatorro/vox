@@ -154,7 +154,7 @@ export const HabitTracker = ({
                       style={habit.completedToday ? {
                         backgroundColor: habit.color + '33',
                         borderColor: habit.color,
-                        ringColor: habit.color,
+                        boxShadow: `0 0 0 2px ${habit.color}`,
                       } : undefined}
                     >
                       {habit.completedToday ? <Check className="h-5 w-5" style={{ color: habit.color }} /> : habit.icon}
