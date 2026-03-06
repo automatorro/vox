@@ -496,7 +496,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Locații</span>
           </Button>
 
-          {/* AI Summary Button */}
+          {/* Habits Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setHabitTrackerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Obiceiuri</span>
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
