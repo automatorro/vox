@@ -95,6 +95,9 @@ const Index = () => {
     getCurrentPosition,
   } = useLocations(user?.id);
 
+  // Habits
+  const { habits, createHabit, toggleCompletion, deleteHabit } = useHabits(user?.id);
+
   // Start watching position for proximity reminders
   useEffect(() => {
     if (locations.length > 0) {
