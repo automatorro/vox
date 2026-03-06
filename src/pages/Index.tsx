@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -28,6 +28,7 @@ import { TemplatesDrawer } from "@/components/TemplatesDrawer";
 import { TagFilter } from "@/components/TagFilter";
 import { ScanNoteModal } from "@/components/ScanNoteModal";
 import { LocationManager } from "@/components/LocationManager";
+import { HabitTracker } from "@/components/HabitTracker";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -39,6 +40,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useTags } from "@/hooks/useTags";
 import { useLocations } from "@/hooks/useLocations";
 import { useProximityReminders } from "@/hooks/useProximityReminders";
+import { useHabits } from "@/hooks/useHabits";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
