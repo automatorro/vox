@@ -858,6 +858,17 @@ const Index = () => {
         getCurrentPosition={getCurrentPosition}
       />
 
+      {/* Mood Tracker */}
+      <MoodTracker
+        open={moodTrackerOpen}
+        onOpenChange={setMoodTrackerOpen}
+        entries={moodEntries}
+        todayEntry={getTodayEntry()}
+        correlationData={getCorrelationData()}
+        averages={getAverages()}
+        onLogMood={logMood}
+      />
+
       {/* Habit Tracker */}
       <HabitTracker
         open={habitTrackerOpen}
