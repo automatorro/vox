@@ -311,6 +311,42 @@ export type Database = {
           },
         ]
       }
+      mood_entries: {
+        Row: {
+          created_at: string
+          date: string
+          energy_level: number
+          focus_minutes: number | null
+          id: string
+          mood_level: number
+          note: string | null
+          tasks_completed: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          energy_level: number
+          focus_minutes?: number | null
+          id?: string
+          mood_level: number
+          note?: string | null
+          tasks_completed?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          energy_level?: number
+          focus_minutes?: number | null
+          id?: string
+          mood_level?: number
+          note?: string | null
+          tasks_completed?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       productivity_daily_stats: {
         Row: {
           created_at: string
