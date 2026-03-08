@@ -502,6 +502,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Locații</span>
           </Button>
 
+          {/* Mood Tracker Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMoodTrackerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <Heart className="h-4 w-4 text-pink-500" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Dispoziție</span>
+          </Button>
+
           {/* Habits Button */}
           <Button
             variant="ghost"
