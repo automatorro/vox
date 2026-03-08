@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart } from "lucide-react";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -29,6 +29,8 @@ import { TagFilter } from "@/components/TagFilter";
 import { ScanNoteModal } from "@/components/ScanNoteModal";
 import { LocationManager } from "@/components/LocationManager";
 import { HabitTracker } from "@/components/HabitTracker";
+import { MoodTracker } from "@/components/MoodTracker";
+import { useMoodTracker } from "@/hooks/useMoodTracker";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -76,6 +78,7 @@ const Index = () => {
   const [statsDrawerType, setStatsDrawerType] = useState<StatType>('tasks');
   const [scanNoteOpen, setScanNoteOpen] = useState(false);
   const [habitTrackerOpen, setHabitTrackerOpen] = useState(false);
+  const [moodTrackerOpen, setMoodTrackerOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -97,6 +100,9 @@ const Index = () => {
 
   // Habits
   const { habits, createHabit, toggleCompletion, deleteHabit } = useHabits(user?.id);
+
+  // Mood Tracker
+  const { entries: moodEntries, getTodayEntry, logMood, getCorrelationData, getAverages } = useMoodTracker(user?.id);
 
   // Start watching position for proximity reminders
   useEffect(() => {
@@ -496,6 +502,17 @@ const Index = () => {
             <span className="hidden sm:inline text-xs sm:text-sm">Locații</span>
           </Button>
 
+          {/* Mood Tracker Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMoodTrackerOpen(true)}
+            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
+          >
+            <Heart className="h-4 w-4 text-pink-500" />
+            <span className="hidden sm:inline text-xs sm:text-sm">Dispoziție</span>
+          </Button>
+
           {/* Habits Button */}
           <Button
             variant="ghost"
@@ -839,6 +856,17 @@ const Index = () => {
         onUpdateLocation={updateLocation}
         onDeleteLocation={deleteLocation}
         getCurrentPosition={getCurrentPosition}
+      />
+
+      {/* Mood Tracker */}
+      <MoodTracker
+        open={moodTrackerOpen}
+        onOpenChange={setMoodTrackerOpen}
+        entries={moodEntries}
+        todayEntry={getTodayEntry()}
+        correlationData={getCorrelationData()}
+        averages={getAverages()}
+        onLogMood={logMood}
       />
 
       {/* Habit Tracker */}
