@@ -29,6 +29,8 @@ import { TagFilter } from "@/components/TagFilter";
 import { ScanNoteModal } from "@/components/ScanNoteModal";
 import { LocationManager } from "@/components/LocationManager";
 import { HabitTracker } from "@/components/HabitTracker";
+import { MoodTracker } from "@/components/MoodTracker";
+import { useMoodTracker } from "@/hooks/useMoodTracker";
 import { Item, Task, Event, Reminder, VoiceParseResult } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useNotifications } from "@/hooks/useNotifications";
