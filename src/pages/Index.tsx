@@ -101,6 +101,9 @@ const Index = () => {
   // Habits
   const { habits, createHabit, toggleCompletion, deleteHabit } = useHabits(user?.id);
 
+  // Mood Tracker
+  const { entries: moodEntries, getTodayEntry, logMood, getCorrelationData, getAverages } = useMoodTracker(user?.id);
+
   // Start watching position for proximity reminders
   useEffect(() => {
     if (locations.length > 0) {
