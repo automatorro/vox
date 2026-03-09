@@ -154,10 +154,11 @@ export const ProjectBreakdownModal = ({
           tasksToCreate.push({
             type: "task",
             title: `[${milestone.title}] ${subtask.title}`,
-            deadline: subtask.deadline,
+            deadline: new Date(subtask.deadline),
             priority: subtask.priority,
             duration: subtask.duration,
             description: `Parte din proiectul: ${breakdown.projectTitle}\nMilestone: ${milestone.title}`,
+          });
           });
         }
       });
