@@ -856,6 +856,21 @@ const Index = () => {
         onToggleCompletion={toggleCompletion}
         onDeleteHabit={deleteHabit}
       />
+
+      {/* Project Breakdown */}
+      <ProjectBreakdownModal
+        open={projectBreakdownOpen}
+        onOpenChange={setProjectBreakdownOpen}
+        onCreateTasks={async (tasks) => {
+          for (const task of tasks) {
+            await handleCreateItem({
+              ...task,
+              id: crypto.randomUUID(),
+              completed: false,
+            } as Item);
+          }
+        }}
+      />
     </div>
   );
 };
