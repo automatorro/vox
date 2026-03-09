@@ -81,6 +81,7 @@ const Index = () => {
   const [scanNoteOpen, setScanNoteOpen] = useState(false);
   const [habitTrackerOpen, setHabitTrackerOpen] = useState(false);
   const [moodTrackerOpen, setMoodTrackerOpen] = useState(false);
+  const [projectBreakdownOpen, setProjectBreakdownOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
