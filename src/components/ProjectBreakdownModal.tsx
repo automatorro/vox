@@ -159,7 +159,7 @@ export const ProjectBreakdownModal = ({
             duration: subtask.duration,
             description: `Parte din proiectul: ${breakdown.projectTitle}\nMilestone: ${milestone.title}`,
           });
-          });
+        }
         }
       });
     });
