@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";

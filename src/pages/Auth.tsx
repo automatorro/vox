@@ -130,10 +130,10 @@ const Auth = () => {
             <Calendar className="h-8 w-8 text-primary-foreground" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            TaskMaster
+            DAYVOX
           </h1>
           <p className="text-muted-foreground mt-2">
-            Organizează-ți ziua eficient
+            Asistentul tău personal de organizare
           </p>
         </div>
 
