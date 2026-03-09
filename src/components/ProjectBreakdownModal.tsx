@@ -160,7 +160,6 @@ export const ProjectBreakdownModal = ({
             description: `Parte din proiectul: ${breakdown.projectTitle}\nMilestone: ${milestone.title}`,
           });
         }
-        }
       });
     });
 
