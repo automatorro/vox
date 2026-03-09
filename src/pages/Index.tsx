@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
-import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart } from "lucide-react";
+import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart, MoreHorizontal } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -465,74 +466,45 @@ const Index = () => {
             onClick={() => setFocusModeOpen(true)}
             className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
           >
-            <Target className="h-4 w-4 text-task" />
+            <Target className="h-4 w-4 text-primary" />
             <span className="hidden sm:inline text-xs sm:text-sm">Focus</span>
           </Button>
 
-          {/* Smart Scheduler Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSmartSchedulerOpen(true)}
-            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
-          >
-            <Brain className="h-4 w-4 text-primary" />
-            <span className="hidden sm:inline text-xs sm:text-sm">Planifică</span>
-          </Button>
-
-          {/* Templates Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setTemplatesDrawerOpen(true)}
-            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
-          >
-            <BookTemplate className="h-4 w-4 text-event" />
-            <span className="hidden sm:inline text-xs sm:text-sm">Template</span>
-          </Button>
-
-          {/* Locations Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setLocationManagerOpen(true)}
-            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
-          >
-            <MapPin className="h-4 w-4 text-reminder" />
-            <span className="hidden sm:inline text-xs sm:text-sm">Locații</span>
-          </Button>
-
-          {/* Mood Tracker Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMoodTrackerOpen(true)}
-            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
-          >
-            <Heart className="h-4 w-4 text-pink-500" />
-            <span className="hidden sm:inline text-xs sm:text-sm">Dispoziție</span>
-          </Button>
-
-          {/* Habits Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setHabitTrackerOpen(true)}
-            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
-          >
-            <Flame className="h-4 w-4 text-orange-500" />
-            <span className="hidden sm:inline text-xs sm:text-sm">Obiceiuri</span>
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMorningSummaryOpen(true)}
-            className="gap-1 sm:gap-2 h-8 px-2 sm:px-3"
-          >
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="hidden sm:inline text-xs sm:text-sm">Rezumat AI</span>
-          </Button>
+          {/* More dropdown for secondary actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2 sm:px-3 gap-1">
+                <MoreHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline text-xs sm:text-sm">Mai multe</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setSmartSchedulerOpen(true)}>
+                <Brain className="h-4 w-4 mr-2 text-primary" />
+                Planifică
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTemplatesDrawerOpen(true)}>
+                <BookTemplate className="h-4 w-4 mr-2 text-primary" />
+                Template
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setLocationManagerOpen(true)}>
+                <MapPin className="h-4 w-4 mr-2 text-primary" />
+                Locații
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMoodTrackerOpen(true)}>
+                <Heart className="h-4 w-4 mr-2 text-primary" />
+                Dispoziție
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setHabitTrackerOpen(true)}>
+                <Flame className="h-4 w-4 mr-2 text-primary" />
+                Obiceiuri
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMorningSummaryOpen(true)}>
+                <Sparkles className="h-4 w-4 mr-2 text-primary" />
+                Rezumat AI
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <span className="text-xs sm:text-sm text-muted-foreground hidden md:inline">
             {profile?.full_name || user?.email}
