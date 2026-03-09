@@ -29,3 +29,12 @@ verify_jwt = false
 
 [functions.smart-scheduler]
 verify_jwt = false
+
+[functions.ai-project-breakdown]
+verify_jwt = false
+
+[functions.scan-note]
+verify_jwt = false
+
+[functions.google-auth-config]
+verify_jwt = false

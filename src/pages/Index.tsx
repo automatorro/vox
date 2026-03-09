@@ -3,6 +3,7 @@ import { isSameDay, format } from "date-fns";
 import { ro } from "date-fns/locale";
 import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ProjectBreakdownModal } from "@/components/ProjectBreakdownModal";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -80,6 +81,7 @@ const Index = () => {
   const [scanNoteOpen, setScanNoteOpen] = useState(false);
   const [habitTrackerOpen, setHabitTrackerOpen] = useState(false);
   const [moodTrackerOpen, setMoodTrackerOpen] = useState(false);
+  const [projectBreakdownOpen, setProjectBreakdownOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -503,6 +505,10 @@ const Index = () => {
                 <Sparkles className="h-4 w-4 mr-2 text-primary" />
                 Rezumat AI
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setProjectBreakdownOpen(true)}>
+                <Target className="h-4 w-4 mr-2 text-primary" />
+                Project Breakdown
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -849,6 +855,21 @@ const Index = () => {
         onCreateHabit={createHabit}
         onToggleCompletion={toggleCompletion}
         onDeleteHabit={deleteHabit}
+      />
+
+      {/* Project Breakdown */}
+      <ProjectBreakdownModal
+        open={projectBreakdownOpen}
+        onOpenChange={setProjectBreakdownOpen}
+        onCreateTasks={async (tasks) => {
+          for (const task of tasks) {
+            await handleCreateItem({
+              ...task,
+              id: crypto.randomUUID(),
+              completed: false,
+            } as Item);
+          }
+        }}
       />
     </div>
   );
