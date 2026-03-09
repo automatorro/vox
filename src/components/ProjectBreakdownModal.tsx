@@ -156,8 +156,10 @@ export const ProjectBreakdownModal = ({
             title: `[${milestone.title}] ${subtask.title}`,
             deadline: new Date(subtask.deadline),
             priority: subtask.priority,
+            importance: subtask.priority === "high" ? "high" : "low",
             duration: subtask.duration,
             description: `Parte din proiectul: ${breakdown.projectTitle}\nMilestone: ${milestone.title}`,
+            createdAt: new Date(),
           });
         }
       });
