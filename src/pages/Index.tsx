@@ -505,6 +505,10 @@ const Index = () => {
                 <Sparkles className="h-4 w-4 mr-2 text-primary" />
                 Rezumat AI
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setProjectBreakdownOpen(true)}>
+                <Target className="h-4 w-4 mr-2 text-primary" />
+                Project Breakdown
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
