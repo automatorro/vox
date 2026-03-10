@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { isSameDay, format } from "date-fns";
+import { format } from "date-fns";
+import { getItemsForDate as getItemsForDateUtil } from "@/utils/recurrence";
 import { ro } from "date-fns/locale";
 import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -195,16 +196,7 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, [items, notificationSettings.pushEnabled, notificationSettings.emailEnabled]);
 
-  const getItemsForDate = (date: Date) => {
-    return items.filter(item => {
-      const itemDate = item.type === 'task'
-        ? (item as Task).deadline
-        : item.type === 'event'
-          ? (item as Event).startTime
-          : (item as any).time;
-      return isSameDay(new Date(itemDate), date);
-    });
-  };
+  const getItemsForDate = (date: Date) => getItemsForDateUtil(items, date);
 
   const allTasks = items.filter(item => item.type === 'task') as Task[];
   const filteredItems = filterCategoryId

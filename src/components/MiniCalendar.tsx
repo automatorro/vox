@@ -4,6 +4,7 @@ import { ro } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Item } from "@/types";
+import { getItemsForDate as getItemsForDateUtil } from "@/utils/recurrence";
 import { Button } from "@/components/ui/button";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
@@ -56,16 +57,7 @@ export const MiniCalendar = ({ selectedDate, onDateSelect, items }: MiniCalendar
     threshold: 40,
   });
 
-  const getItemsForDate = (date: Date) => {
-    return items.filter(item => {
-      const itemDate = item.type === 'task' 
-        ? (item as any).deadline 
-        : item.type === 'event' 
-          ? (item as any).startTime 
-          : (item as any).time;
-      return isSameDay(new Date(itemDate), date);
-    });
-  };
+  const getItemsForDate = (date: Date) => getItemsForDateUtil(items, date);
 
   const hasItems = (date: Date) => getItemsForDate(date).length > 0;
   const isToday = (date: Date) => isSameDay(date, new Date());

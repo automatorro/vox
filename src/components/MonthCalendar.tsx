@@ -16,6 +16,7 @@ import { ro } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Circle, Calendar, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Item, Task, Event, Reminder } from "@/types";
+import { getItemsForDate as getItemsForDateUtil } from "@/utils/recurrence";
 import { cn } from "@/lib/utils";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 import { useConfirmationSound } from "@/hooks/useConfirmationSound";
@@ -77,16 +78,7 @@ export const MonthCalendar = ({ items, onDaySelect, selectedDate, onMoveItemToDa
     day = addDays(day, 1);
   }
 
-  const getItemsForDate = (date: Date) => {
-    return items.filter(item => {
-      const itemDate = item.type === 'task' 
-        ? (item as Task).deadline 
-        : item.type === 'event' 
-          ? (item as Event).startTime 
-          : (item as Reminder).time;
-      return isSameDay(new Date(itemDate), date);
-    });
-  };
+  const getItemsForDate = (date: Date) => getItemsForDateUtil(items, date);
 
   const handleMoveItem = useCallback((itemId: string, targetDate: Date) => {
     if (onMoveItemToDate) {
