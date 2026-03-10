@@ -57,7 +57,14 @@ export const OverloadResolutionModal = ({
   };
 
   const getItemsForDate = (date: Date): Item[] => {
-    return allItems.filter(item => isSameDay(getItemDate(item), date));
+    return allItems.filter(item => {
+      const itemDate = getItemDate(item);
+      if (isSameDay(itemDate, date)) return true;
+      const recurrenceType = item.recurrenceType;
+      if (!recurrenceType || recurrenceType === 'none') return false;
+      // For overload modal, use simple same-day check for recurring items
+      return false; // Keep simple here to avoid complexity
+    });
   };
 
   const formatItemTime = (item: Item): string => {

@@ -196,16 +196,7 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, [items, notificationSettings.pushEnabled, notificationSettings.emailEnabled]);
 
-  const getItemsForDate = (date: Date) => {
-    return items.filter(item => {
-      const itemDate = item.type === 'task'
-        ? (item as Task).deadline
-        : item.type === 'event'
-          ? (item as Event).startTime
-          : (item as any).time;
-      return isSameDay(new Date(itemDate), date);
-    });
-  };
+  const getItemsForDate = (date: Date) => getItemsForDateUtil(items, date);
 
   const allTasks = items.filter(item => item.type === 'task') as Task[];
   const filteredItems = filterCategoryId
