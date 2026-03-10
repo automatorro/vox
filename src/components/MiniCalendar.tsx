@@ -4,6 +4,7 @@ import { ro } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Item } from "@/types";
+import { getItemsForDate as getItemsForDateUtil } from "@/utils/recurrence";
 import { Button } from "@/components/ui/button";
 import { useSwipeNavigation } from "@/hooks/useSwipeNavigation";
 
