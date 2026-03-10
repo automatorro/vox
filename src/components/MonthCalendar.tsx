@@ -16,6 +16,7 @@ import { ro } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Circle, Calendar, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Item, Task, Event, Reminder } from "@/types";
+import { getItemsForDate as getItemsForDateUtil } from "@/utils/recurrence";
 import { cn } from "@/lib/utils";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 import { useConfirmationSound } from "@/hooks/useConfirmationSound";
