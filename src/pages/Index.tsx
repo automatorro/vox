@@ -613,25 +613,13 @@ const Index = () => {
           <Button
             variant="outline"
             size="lg"
-            className="h-12 px-4 rounded-full gap-2"
+            className="h-14 w-14 rounded-full"
             onClick={() => setScanNoteOpen(true)}
           >
             <ScanLine className="h-5 w-5" />
-            <span className="font-medium hidden sm:inline">Scanează</span>
           </Button>
 
-          {/* Add Button */}
-          <Button
-            variant="default"
-            size="lg"
-            className="h-12 px-6 rounded-full shadow-lg gap-2"
-            onClick={() => setCreateDrawerOpen(true)}
-          >
-            <Plus className="h-5 w-5" />
-            <span className="font-medium">Adaugă</span>
-          </Button>
-
-          {/* Voice Button */}
+          {/* Voice Button - center */}
           <VoiceButton
             onParseComplete={(result) => {
               setVoiceParseResult(result);
@@ -641,6 +629,16 @@ const Index = () => {
             existingItems={items}
             categories={categories}
           />
+
+          {/* Add Button */}
+          <Button
+            variant="outline"
+            size="lg"
+            className="h-14 w-14 rounded-full"
+            onClick={() => setCreateDrawerOpen(true)}
+          >
+            <Plus className="h-5 w-5" />
+          </Button>
         </div>
       </div>
 
