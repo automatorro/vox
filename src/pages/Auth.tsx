@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, Calendar, Bell, Mic } from 'lucide-react';
+import { Loader2, CheckCircle, Calendar, Bell, Mic, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const emailSchema = z.string().email('Email invalid');
@@ -19,6 +20,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   
   const { signIn, signUp, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
@@ -151,6 +155,76 @@ const Auth = () => {
           ))}
         </div>
 
+        {showForgotPassword ? (
+          <Card className="border-border/50 shadow-xl">
+            <CardHeader className="pb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-fit -ml-2 mb-2"
+                onClick={() => { setShowForgotPassword(false); setForgotSent(false); }}
+              >
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Înapoi
+              </Button>
+              <CardTitle>Resetare parolă</CardTitle>
+              <CardDescription>
+                Introdu emailul pentru a primi un link de resetare
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {forgotSent ? (
+                <div className="text-center py-4">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                  <p className="text-foreground font-medium mb-1">Email trimis! 📧</p>
+                  <p className="text-sm text-muted-foreground">
+                    Verifică-ți inbox-ul (și spam) pentru linkul de resetare.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setIsLoading(true);
+                  const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+                    redirectTo: `${window.location.origin}/reset-password`,
+                  });
+                  setIsLoading(false);
+                  if (error) {
+                    toast({
+                      title: 'Eroare',
+                      description: 'Nu s-a putut trimite emailul. Încearcă din nou.',
+                      variant: 'destructive',
+                    });
+                  } else {
+                    setForgotSent(true);
+                  }
+                }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="forgot-email">Email</Label>
+                    <Input
+                      id="forgot-email"
+                      type="email"
+                      placeholder="email@exemplu.com"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Se trimite...
+                      </>
+                    ) : (
+                      'Trimite link de resetare'
+                    )}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
         <Card className="border-border/50 shadow-xl">
           <CardHeader className="pb-4">
             <CardTitle>Autentificare</CardTitle>
@@ -204,6 +278,14 @@ const Auth = () => {
                     ) : (
                       'Conectare'
                     )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="w-full text-sm text-muted-foreground"
+                    onClick={() => { setShowForgotPassword(true); setForgotEmail(email); }}
+                  >
+                    Am uitat parola
                   </Button>
                 </form>
               </TabsContent>
@@ -263,6 +345,7 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        )}
       </div>
     </div>
   );

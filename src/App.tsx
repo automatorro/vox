@@ -7,6 +7,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,7 +20,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route 
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
             path="/" 
             element={
               <AuthGuard>
