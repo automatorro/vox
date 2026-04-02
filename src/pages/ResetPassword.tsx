@@ -71,7 +71,7 @@ const ResetPassword = () => {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
         <Card className="w-full max-w-md border-border/50 shadow-xl">
           <CardContent className="pt-8 pb-8 text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
+            <CheckCircle className="h-16 w-16 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-bold text-foreground mb-2">Parolă schimbată!</h2>
             <p className="text-muted-foreground">Redirecționare către autentificare...</p>
           </CardContent>
