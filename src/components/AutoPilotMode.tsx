@@ -53,7 +53,7 @@ export const AutoPilotMode = ({ open, onOpenChange, tasks, onCompleteTask }: Aut
   const [elapsed, setElapsed] = useState(0); // seconds
   const [completedCount, setCompletedCount] = useState(0);
   const [totalTimeSpent, setTotalTimeSpent] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initialize only when dialog opens, not on every tasks change
   const hasInitialized = useRef(false);
