@@ -98,7 +98,7 @@ export const ItemCard = ({ item, categories, locations, subtaskProgress, onCompl
   return (
     <div
       className={cn(
-        "group relative flex items-start gap-4 p-4 rounded-xl border-l-4 transition-all duration-200 hover:scale-[1.02]",
+        "group relative flex items-start gap-3 p-3 sm:p-4 rounded-xl border-l-4 transition-all duration-200 hover:scale-[1.02] overflow-hidden",
         getTypeStyles(),
         isTask && (item as Task).completed && "opacity-50"
       )}

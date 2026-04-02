@@ -388,7 +388,7 @@ const Index = () => {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden max-w-full">
       <Header
         onCalendarClick={handleCalendarClick}
         onSettingsClick={() => setNotificationSettingsOpen(true)}
