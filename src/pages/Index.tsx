@@ -110,6 +110,13 @@ const Index = () => {
   // Mood Tracker
   const { entries: moodEntries, getTodayEntry, logMood, getCorrelationData, getAverages } = useMoodTracker(user?.id);
 
+  // Onboarding for new users
+  useEffect(() => {
+    if (!itemsLoading && items.length === 0 && !localStorage.getItem('dayvox-onboarding-complete')) {
+      setOnboardingOpen(true);
+    }
+  }, [itemsLoading, items.length]);
+
   // Start watching position for proximity reminders
   useEffect(() => {
     if (locations.length > 0) {
