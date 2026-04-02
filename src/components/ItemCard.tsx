@@ -138,7 +138,7 @@ export const ItemCard = ({ item, categories, locations, subtaskProgress, onCompl
         )}
 
         {/* Meta info */}
-        <div className="flex items-center gap-3 mt-2">
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Clock className="h-3.5 w-3.5" />
             {getTimeInfo()}
