@@ -595,6 +595,9 @@ const Index = () => {
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
                 onReorderItems={reorderItems}
+                onAddItem={() => setCreateDrawerOpen(true)}
+                onVoice={() => setVoiceConversationalOpen(true)}
+                onScan={() => setScanNoteOpen(true)}
               />
             </section>
           </>
@@ -871,6 +874,14 @@ const Index = () => {
             } as Item);
           }
         }}
+      />
+
+      {/* Onboarding */}
+      <OnboardingModal
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        onAddItem={() => setCreateDrawerOpen(true)}
+        userName={profile?.full_name || undefined}
       />
     </div>
   );
