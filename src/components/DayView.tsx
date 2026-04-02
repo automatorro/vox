@@ -4,7 +4,8 @@ import { ro } from "date-fns/locale";
 import { Item, Task } from "@/types";
 import { Category } from "@/hooks/useCategories";
 import { ItemCard } from "./ItemCard";
-import { AlertCircle, GripVertical } from "lucide-react";
+import { AlertCircle, GripVertical, Plus, Mic, ScanLine, Sparkles, Calendar as CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useTouchDragDrop } from "@/hooks/useTouchDragDrop";
 import { useSubtaskCounts } from "@/hooks/useSubtasks";
@@ -18,6 +19,9 @@ interface DayViewProps {
   onEditItem?: (item: Item) => void;
   onDeleteItem?: (id: string) => void;
   onReorderItems?: (reorderedItems: Item[]) => void;
+  onAddItem?: () => void;
+  onVoice?: () => void;
+  onScan?: () => void;
 }
 
 export const DayView = ({ 
@@ -28,7 +32,10 @@ export const DayView = ({
   onCompleteTask, 
   onEditItem, 
   onDeleteItem,
-  onReorderItems 
+  onReorderItems,
+  onAddItem,
+  onVoice,
+  onScan,
 }: DayViewProps) => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -149,11 +156,40 @@ export const DayView = ({
       {/* Items list */}
       <div className="space-y-3">
         {sortedItems.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Nimic programat pentru azi</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">
-              Apasă butonul de voce pentru a adăuga ceva
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
+              <CalendarIcon className="h-8 w-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">
+              {isToday ? 'Ziua ta e liberă! ✨' : 'Nimic programat'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6 max-w-[260px]">
+              {isToday ? 'Adaugă primul task, eveniment sau reminder.' : 'Niciun item pentru această zi.'}
             </p>
+            <div className="flex flex-col gap-2 w-full max-w-[240px]">
+              <Button onClick={onAddItem} className="w-full gap-2" size="sm">
+                <Plus className="h-4 w-4" />
+                Adaugă un item
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={onVoice} className="flex-1 gap-1" size="sm">
+                  <Mic className="h-3.5 w-3.5" />
+                  Vocal
+                </Button>
+                <Button variant="outline" onClick={onScan} className="flex-1 gap-1" size="sm">
+                  <ScanLine className="h-3.5 w-3.5" />
+                  Scanează
+                </Button>
+              </div>
+            </div>
+            {isToday && (
+              <div className="mt-6 p-3 rounded-xl bg-primary/5 border border-primary/10 max-w-[260px]">
+                <p className="text-xs text-primary flex items-start gap-2">
+                  <Sparkles className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
+                  <span>Explorează "Mai multe" din toolbar pentru Smart Scheduler, Templates și Habits!</span>
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           sortedItems.map((item, index) => (

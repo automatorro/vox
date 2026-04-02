@@ -5,6 +5,7 @@ import { ro } from "date-fns/locale";
 import { LayoutDashboard, CalendarDays, Plus, LogOut, Loader2, Sparkles, Grid, Target, Brain, BookTemplate, Zap, ScanLine, MapPin, Flame, Heart, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ProjectBreakdownModal } from "@/components/ProjectBreakdownModal";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import { Header } from "@/components/Header";
 import { VoiceButton } from "@/components/VoiceButton";
 import { VoiceConfirmationModal } from "@/components/VoiceConfirmationModal";
@@ -83,6 +84,7 @@ const Index = () => {
   const [habitTrackerOpen, setHabitTrackerOpen] = useState(false);
   const [moodTrackerOpen, setMoodTrackerOpen] = useState(false);
   const [projectBreakdownOpen, setProjectBreakdownOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const { toast } = useToast();
   const { user, profile, signOut } = useAuth();
   const { items, loading: itemsLoading, createItem, updateItem, deleteItem, toggleTaskComplete, reorderItems, setItems } = useItems(user?.id);
@@ -107,6 +109,13 @@ const Index = () => {
 
   // Mood Tracker
   const { entries: moodEntries, getTodayEntry, logMood, getCorrelationData, getAverages } = useMoodTracker(user?.id);
+
+  // Onboarding for new users
+  useEffect(() => {
+    if (!itemsLoading && items.length === 0 && !localStorage.getItem('dayvox-onboarding-complete')) {
+      setOnboardingOpen(true);
+    }
+  }, [itemsLoading, items.length]);
 
   // Start watching position for proximity reminders
   useEffect(() => {
@@ -586,6 +595,9 @@ const Index = () => {
                 onEditItem={handleEditItem}
                 onDeleteItem={handleDeleteItem}
                 onReorderItems={reorderItems}
+                onAddItem={() => setCreateDrawerOpen(true)}
+                onVoice={() => setVoiceConversationalOpen(true)}
+                onScan={() => setScanNoteOpen(true)}
               />
             </section>
           </>
@@ -862,6 +874,14 @@ const Index = () => {
             } as Item);
           }
         }}
+      />
+
+      {/* Onboarding */}
+      <OnboardingModal
+        open={onboardingOpen}
+        onOpenChange={setOnboardingOpen}
+        onAddItem={() => setCreateDrawerOpen(true)}
+        userName={profile?.full_name || undefined}
       />
     </div>
   );
