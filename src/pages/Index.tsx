@@ -401,7 +401,7 @@ const Index = () => {
       />
 
       {/* User info & View Toggle */}
-      <div className="px-4 sm:px-6 py-2 flex items-center justify-between flex-shrink-0">
+      <div className="px-4 sm:px-6 py-2 flex items-center justify-between flex-shrink-0 min-w-0 overflow-x-hidden">
         <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-xl bg-card/50 border border-border">
           <Button
             variant="ghost"
