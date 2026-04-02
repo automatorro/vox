@@ -38,7 +38,7 @@ export const useTouchDragDrop = (options: UseTouchDragDropOptions = {}) => {
   });
 
   const ghostRef = useRef<HTMLElement | null>(null);
-  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const createGhost = useCallback((element: HTMLElement, x: number, y: number) => {
