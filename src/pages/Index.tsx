@@ -388,7 +388,7 @@ const Index = () => {
   }
 
   return (
-    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden">
+    <div className="h-[100dvh] flex flex-col bg-background overflow-hidden max-w-full">
       <Header
         onCalendarClick={handleCalendarClick}
         onSettingsClick={() => setNotificationSettingsOpen(true)}
@@ -401,7 +401,7 @@ const Index = () => {
       />
 
       {/* User info & View Toggle */}
-      <div className="px-4 sm:px-6 py-2 flex items-center justify-between flex-shrink-0">
+      <div className="px-4 sm:px-6 py-2 flex items-center justify-between flex-shrink-0 min-w-0 overflow-x-hidden">
         <div className="inline-flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 rounded-xl bg-card/50 border border-border">
           <Button
             variant="ghost"
@@ -520,7 +520,7 @@ const Index = () => {
       </div>
 
       {/* Scrollable Main Content */}
-      <main className="flex-1 overflow-y-auto px-4 sm:px-6 pb-28">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 pb-28">
         {viewMode === 'dashboard' ? (
           <>
             {/* Quick Stats */}

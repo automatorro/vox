@@ -23,7 +23,7 @@ export const Header = ({
   onOverloadClick,
 }: HeaderProps) => {
   return (
-    <header className="flex items-center justify-between px-6 py-4">
+    <header className="flex items-center justify-between px-4 sm:px-6 py-4 flex-shrink-0 min-w-0">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-voice-gradient flex items-center justify-center shadow-voice">
           <span className="text-xl font-bold text-primary-foreground">V</span>
@@ -34,7 +34,7 @@ export const Header = ({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         {/* Overload indicator */}
         {overloadCount > 0 && (
           <Button 
