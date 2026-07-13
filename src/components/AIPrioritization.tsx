@@ -23,13 +23,17 @@ export const AIPrioritization = ({ tasks, onReorder }: AIPrioritizationProps) =>
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
 
-  const incompleteTasks = tasks.filter(t => !t.completed);
+  // STRICT: exclude completed tasks — AI prioritization is only useful for pending work
+  const incompleteTasks = tasks.filter(t => t.completed !== true);
+  const completedCount = tasks.length - incompleteTasks.length;
 
   const handleAnalyze = async () => {
     if (incompleteTasks.length === 0) {
       toast({
-        title: "Nu ai taskuri de priorizat",
-        description: "Adaugă taskuri pentru a folosi prioritizarea AI",
+        title: "Nu ai taskuri active de priorizat",
+        description: completedCount > 0
+          ? `Toate cele ${completedCount} taskuri sunt deja finalizate. Felicitări! 🎉`
+          : "Adaugă taskuri pentru a folosi prioritizarea AI",
         variant: "destructive",
       });
       return;
@@ -46,8 +50,7 @@ export const AIPrioritization = ({ tasks, onReorder }: AIPrioritizationProps) =>
             title: t.title,
             priority: t.priority,
             deadline: t.deadline,
-            duration: t.duration || 30, // use actual duration or default
-            completed: t.completed,
+            duration: t.duration || 30,
           }))
         }
       });
@@ -58,7 +61,13 @@ export const AIPrioritization = ({ tasks, onReorder }: AIPrioritizationProps) =>
         throw new Error(data.error);
       }
 
-      setResult(data);
+      // Extra safety: filter any ids returned by AI to only include incomplete tasks
+      const incompleteIds = new Set(incompleteTasks.map(t => t.id));
+      const safeData: PrioritizationResult = {
+        ...data,
+        orderedTaskIds: (data.orderedTaskIds || []).filter((id: string) => incompleteIds.has(id)),
+      };
+      setResult(safeData);
       setIsExpanded(true);
 
       toast({
@@ -120,7 +129,7 @@ export const AIPrioritization = ({ tasks, onReorder }: AIPrioritizationProps) =>
         ) : (
           <>
             <Sparkles className="h-4 w-4" />
-            Prioritizare AI ({incompleteTasks.length} taskuri)
+            Prioritizare AI ({incompleteTasks.length} {incompleteTasks.length === 1 ? 'task activ' : 'taskuri active'})
           </>
         )}
       </Button>
