@@ -202,7 +202,7 @@ export const ProjectBreakdownModal = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl">
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-3xl p-4 sm:p-6 flex flex-col overflow-hidden">
         <SheetHeader className="pb-4">
           <SheetTitle className="flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
@@ -213,7 +213,7 @@ export const ProjectBreakdownModal = ({
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="h-[calc(90vh-120px)] pr-4">
+        <ScrollArea className="flex-1 -mr-2 pr-2 min-w-0">
           {!breakdown ? (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -334,7 +334,7 @@ export const ProjectBreakdownModal = ({
                             <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="font-medium">{milestone.title}</div>
+                            <div className="font-medium truncate">{milestone.title}</div>
                             <div className="text-sm text-muted-foreground truncate">
                               {milestone.description}
                             </div>
@@ -389,9 +389,9 @@ export const ProjectBreakdownModal = ({
               </div>
 
               {/* Actions */}
-              <div className="sticky bottom-0 pt-4 pb-2 bg-background border-t -mx-4 px-4">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">
+              <div className="sticky bottom-0 pt-4 pb-2 bg-background border-t -mx-4 sm:-mx-6 px-4 sm:px-6">
+                <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     {selectedCount} din {totalSubtasks} subtask-uri selectate
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => setBreakdown(null)}>
